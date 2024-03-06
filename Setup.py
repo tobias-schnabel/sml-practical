@@ -1,7 +1,7 @@
 # Library Import
 import numpy as np
 import pandas as pd
-import scikit-learn as skl
+import sklearn as skl
 
 
 # Load the training data and the test inputs
