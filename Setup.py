@@ -4,7 +4,25 @@ import pandas as pd
 import sklearn as skl
 import matplotlib.pyplot as plt
 import seaborn as sns
+import sklearn
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.ensemble import BaggingClassifier
+from scipy.stats import randint
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import cross_val_score
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import roc_auc_score, average_precision_score, classification_report, auc
+import scikitplot as skplt #search for scikit-plot
+
 
 # Load the training data and the test inputs
 x_train = pd.read_csv('X_train.csv', index_col = 0, header=[0, 1, 2])
