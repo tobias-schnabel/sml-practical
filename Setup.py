@@ -8,11 +8,12 @@ from sklearn.model_selection import train_test_split
 
 # Load the training data and the test inputs
 x_train = pd.read_csv('X_train.csv', index_col = 0, header=[0, 1, 2])
+x_train_np = np.array(x_train)
 y_train = pd.read_csv('y_train.csv', index_col=0)
-y_train = y_train.squeeze().to_numpy() # Make y_train a NumPy array
+y_train_np = y_train.squeeze().to_numpy() # Make y_train a NumPy array
 x_test = pd.read_csv('X_test.csv', index_col = 0, header=[0, 1, 2])
+x_test_np = np.array(x_test)
 
-print("x_train: {} rows on {} columns".format(x_train.shape[0], x_train.shape[1]))
 print("8 different classes: Electronic, Experimental, Folk, Hip-Hop, Instrumental, International, Pop or Rock.")
 print("objective 1: construct a classifier which, based on the features of a song, predicts its genre")
 print("objective 2: estimate its generalisation error under the 0–1 loss.")
@@ -39,3 +40,6 @@ feature_descriptions = {
 print("Feature description: ")
 for feature, description in feature_descriptions.items():
     print(f"{feature}: {description}")
+
+print("x_train: {} rows on {} columns".format(x_train.shape[0], x_train.shape[1]))
+print("Objects loaded: x_train, x_test, y_train as pd dataframes, x_train_np, x_test_np, y_train_np as NP arrays")
