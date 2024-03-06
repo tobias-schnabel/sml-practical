@@ -14,6 +14,10 @@ y_train_np = y_train.squeeze().to_numpy() # Make y_train a NumPy array
 x_test = pd.read_csv('X_test.csv', index_col = 0, header=[0, 1, 2])
 x_test_np = np.array(x_test)
 
+x_train_flat_columns = ['_'.join(col).strip() for col in x_train.columns.values]
+x_train.columns = x_train_flat_columns
+
+
 print("8 different classes: Electronic, Experimental, Folk, Hip-Hop, Instrumental, International, Pop or Rock.")
 print("objective 1: construct a classifier which, based on the features of a song, predicts its genre")
 print("objective 2: estimate its generalisation error under the 0–1 loss.")
