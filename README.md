@@ -12,3 +12,8 @@ conda env create -f environment.yml
 conda activate sml-practical-env
 ```
 3. And set IDE interpreter to sml-practical-env
+
+4. To update the environment, deactivate and use 
+```bash
+ conda env update --name sml-practical-env --file environment.yml --prune
+```
