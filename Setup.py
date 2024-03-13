@@ -41,6 +41,9 @@ x_test_np = np.array(x_test)
 x_train_flat_columns = ['_'.join(col).strip() for col in x_train.columns.values]
 x_train.columns = x_train_flat_columns
 
+x_test_flat_columns = ['_'.join(col).strip() for col in x_train.columns.values]
+x_test.columns = x_train_flat_columns
+
 # Standardized function to generate final submission csv file
 def generate_submission_csv(genre_predictions, filename="submission.csv"):
     submission_df = pd.DataFrame(data={
