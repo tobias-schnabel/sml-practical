@@ -166,3 +166,6 @@ cython_debug/
 /.idea/inspectionProfiles/Project_Default.xml
 /.idea/sml-practical.iml
 /.idea/vcs.xml
+/.idea/deployment.xml
+/.idea/sshConfigs.xml
+/.idea/webServers.xml
