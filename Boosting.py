@@ -118,7 +118,7 @@ for feature_name, feature_count in feature_structure.items():
         return objective(trial, X_sub_train, Y_sub_train)
 
     study = optuna.create_study(direction='minimize', study_name=f"XGB_{feature_name}")
-    study.optimize(subset_objective, n_trials=100)
+    study.optimize(subset_objective, n_trials=50)
 
     best_params_subsets[feature_name] = study.best_trial.params
 
@@ -132,7 +132,8 @@ for feature_name, feature_count in feature_structure.items():
     # Convert the subset dataset into DMatrix form
     dmatrix = xgb.DMatrix(X_sub_train, label=Y_sub_train)
     # Retrain
-    final_model = xgb.train(params, X_sub_train, num_boost_round=10_000) # dtrain_val_combined
+    print(f"Retraining the tuned model for feature subset: {feature_name}")
+    final_model = xgb.train(params, dmatrix, num_boost_round=10_000) # dtrain_val_combined
 
     # Evaluate the final model on the validation set
     dval = xgb.DMatrix(val_subsets[feature_name], label=Y_val)
