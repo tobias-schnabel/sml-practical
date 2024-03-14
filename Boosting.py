@@ -122,18 +122,16 @@ for feature_name, feature_count in feature_structure.items():
 
     best_params_subsets[feature_name] = study.best_trial.params
 
-    # # Merge train and validation subsets for final model retraining
-    # X_sub_train_val_combined = np.vstack((X_sub_train, val_subsets[feature_name]))
-    # Y_train_val_combined = np.concatenate((Y_train, Y_val))  # Assuming Y_val is defined
-    # 
-    # # Retrain the model on the combined training and validation set with the best parameters
-    # dtrain_val_combined = xgb.DMatrix(X_sub_train_val_combined, label=Y_train_val_combined)
-    # Retrain model with optimal parameters with more boosting rounds
     params = {
         'objective': 'multi:softmax',
         'num_class': 8,
         **best_params_subsets[feature_name],  # Unpack the best parameters
     }
+
+    # Convert training data to dmatrix
+    # Convert the subset dataset into DMatrix form
+    dmatrix = xgb.DMatrix(X_sub_train, label=Y_sub_train)
+    # Retrain
     final_model = xgb.train(params, X_sub_train, num_boost_round=10_000) # dtrain_val_combined
 
     # Evaluate the final model on the validation set
