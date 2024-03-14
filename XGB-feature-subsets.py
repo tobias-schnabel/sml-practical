@@ -22,11 +22,11 @@ x_test_np = np.array(x_test)
 x_train_flat_columns = ['_'.join(col).strip() for col in x_train.columns.values]
 x_train.columns = x_train_flat_columns
 
-x_test_flat_columns = ['_'.join(col).strip() for col in x_train.columns.values]
+x_test_flat_columns = ['_'.join(col).strip() for col in x_test.columns.values]
 x_test.columns = x_train_flat_columns
 # Prepare data
 label_encoder = LabelEncoder()
-y_train_encoded = label_encoder.fit_transform(y_train_np.ravel()) #
+y_train_encoded = label_encoder.fit_transform(y_train_np.ravel())
 
 # Split training data into training and temporary validation sets
 X_train, X_temp, Y_train, Y_temp = train_test_split(x_train, y_train_encoded, test_size=0.4, random_state=42)
@@ -38,25 +38,27 @@ scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_val_scaled = scaler.transform(X_val)
 X_test_scaled = scaler.transform(X_test)  
-X_real_test_scaled = scaler.transform(x_test) # real test set we don't have labels for
+X_real_test_scaled = scaler.transform(x_test)  # real test set we don't have labels for
 
-def split_features_by_type(X, feature_structure):
+
+def split_features_by_type(x, defined_feature_structure):
     """
     Splits the dataset into subsets based on the feature structure provided.
 
-    :param X: numpy array, the dataset to be split (features only)
-    :param feature_structure: dict, keys are feature names and values are the number of features of that type
+    :param x: numpy array, the dataset to be split (features only)
+    :param defined_feature_structure: dict, keys are feature names and values are the number of features of that type
     :return: dict of feature subsets
     """
     feature_subsets = {}
     start_idx = 0
     
-    for feature_name, feature_count in feature_structure.items():
-        end_idx = start_idx + feature_count
-        feature_subsets[feature_name] = X[:, start_idx:end_idx]
+    for defined_feature_name, defined_feature_count in defined_feature_structure.items():
+        end_idx = start_idx + defined_feature_count
+        feature_subsets[defined_feature_name] = x[:, start_idx:end_idx]
         start_idx = end_idx
     
     return feature_subsets
+
 
 # Define the feature structure
 feature_structure = {
@@ -73,35 +75,35 @@ feature_structure = {
     'zcr': 7
 }
 
-
+# Split Each Set
 train_subsets = split_features_by_type(X_train_scaled, feature_structure)
 val_subsets = split_features_by_type(X_val_scaled, feature_structure)
 test_subsets = split_features_by_type(X_test_scaled, feature_structure)
 
 
-def objective(trial, X_sub, Y_sub):
+def objective(trial, x_sub, y_sub):
     # Hyperparameters
-    params = {
+    tuning_params = {
         'objective': 'multi:softmax',
         'num_class': 8,
         'max_depth': trial.suggest_int('max_depth', 3, 60),
         'eta': trial.suggest_float('eta', 0.01, 0.4),
         'subsample': trial.suggest_float('subsample', 0.6, 1.0),
         'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
-        'eval_metric': 'merror'  # Multiclass Classification Error
+        'eval_metric': 'mlogloss'  # Multiclass Logloss
     }
 
     # Convert the subset dataset into DMatrix form
-    dmatrix = xgb.DMatrix(X_sub, label=Y_sub)
+    train_dmatrix = xgb.DMatrix(x_sub, label=y_sub)
 
     # Perform cross-validation
-    cv_results = xgb.cv(params, dmatrix, num_boost_round=5000, nfold=5, stratified=True,
+    cv_results = xgb.cv(tuning_params, train_dmatrix, num_boost_round=5000, nfold=5, stratified=True,
                         early_stopping_rounds=35, seed=42, verbose_eval=False)
 
-    # Extract the minimum mean merror from the CV results
-    min_mean_merror = cv_results['test-merror-mean'].min()
+    # Extract the minimum mean mlogloss from the CV results
+    min_mean_mlogloss = cv_results['test-mlogloss-mean'].min()
 
-    return min_mean_merror
+    return min_mean_mlogloss
 
 
 best_params_subsets = {}
@@ -121,8 +123,10 @@ for feature_name, feature_count in feature_structure.items():
     def subset_objective(trial):
         return objective(trial, X_sub_train, Y_sub_train)
 
+
+    # noinspection PyArgumentList
     study = optuna.create_study(direction='minimize', study_name=f"XGB_{feature_name}")
-    study.optimize(subset_objective, n_trials=80, verbose=False)
+    study.optimize(subset_objective, n_trials=80)
 
     best_params_subsets[feature_name] = study.best_trial.params
 
@@ -137,7 +141,7 @@ for feature_name, feature_count in feature_structure.items():
     dmatrix = xgb.DMatrix(X_sub_train, label=Y_sub_train)
     # Retrain
     print(f"Retraining the tuned model for feature subset: {feature_name}")
-    final_model = xgb.train(params, dmatrix, num_boost_round=10_000) # dtrain_val_combined
+    final_model = xgb.train(params, dmatrix, num_boost_round=10_000)
 
     # Evaluate the final model on the validation set
     dval = xgb.DMatrix(val_subsets[feature_name], label=Y_val)
