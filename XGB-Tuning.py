@@ -56,7 +56,7 @@ def objective(trial):
     # List to hold the validation sets
     evals = [(dtrain, 'train'), (dval, 'validation')]
     model = xgb.train(tuning_params, dtrain, num_boost_round=5_000, evals=evals,
-                      early_stopping_rounds=35, verbose_eval=False, eval_metric='mlogloss')
+                      early_stopping_rounds=35, verbose_eval=False)
 
     # Predictions on the validation set
     preds = model.predict(dval)
