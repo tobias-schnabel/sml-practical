@@ -96,7 +96,7 @@ def objective(trial, X_sub, Y_sub):
 
     # Perform cross-validation
     cv_results = xgb.cv(params, dmatrix, num_boost_round=5000, nfold=5, stratified=True,
-                        early_stopping_rounds=25, seed=42, verbose_eval=False)
+                        early_stopping_rounds=35, seed=42, verbose_eval=False)
 
     # Extract the minimum mean merror from the CV results
     min_mean_merror = cv_results['test-merror-mean'].min()
@@ -107,8 +107,12 @@ def objective(trial, X_sub, Y_sub):
 best_params_subsets = {}
 validation_accuracies = {}
 
+# Total number of feature subsets
+total_feature_subsets = len(feature_structure)
+current_feature_subset_index = 1
+
 for feature_name, feature_count in feature_structure.items():
-    print(f"Running study for feature subset: {feature_name}")
+    print(f"Running study for feature subset: {feature_name} ({current_feature_subset_index}/{total_feature_subsets})")
     
     # Prepare the data for this subset
     X_sub_train = train_subsets[feature_name]
@@ -118,7 +122,7 @@ for feature_name, feature_count in feature_structure.items():
         return objective(trial, X_sub_train, Y_sub_train)
 
     study = optuna.create_study(direction='minimize', study_name=f"XGB_{feature_name}")
-    study.optimize(subset_objective, n_trials=50)
+    study.optimize(subset_objective, n_trials=80, verbose=False)
 
     best_params_subsets[feature_name] = study.best_trial.params
 
@@ -141,8 +145,11 @@ for feature_name, feature_count in feature_structure.items():
     val_accuracy = accuracy_score(Y_val, preds)
     validation_accuracies[feature_name] = val_accuracy
 
+    # Format val_accuracy to percent with 1 decimal place
+    formatted_val_accuracy = f"{val_accuracy * 100:.1f}"
+
     # Save the final model
-    model_name = f'Models/XGBoost-Feature-Subsets/xgboost_{feature_name}_final.model'
+    model_name = f"Models/XGBoost-Feature-Subsets/xgboost_{feature_name}_{formatted_val_accuracy}_accuracy.model"
     final_model.save_model(model_name)
 
     print(f"Validation accuracy for {feature_name}: {val_accuracy}")
