@@ -1,6 +1,29 @@
 import json
-from datetime import datetime
 import subprocess
+from datetime import datetime
+
+# Library Import
+import numpy as np
+import optuna
+import pandas as pd
+import xgboost as xgb
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+
+# Load the training data and the test inputs
+x_train = pd.read_csv('X_train.csv', index_col=0, header=[0, 1, 2])
+x_train_np = np.array(x_train)
+y_train = pd.read_csv('y_train.csv', index_col=0)
+y_train_np = y_train.squeeze().to_numpy()  # Make y_train a NumPy array
+x_test = pd.read_csv('X_test.csv', index_col=0, header=[0, 1, 2])
+x_test_np = np.array(x_test)
+
+x_train_flat_columns = ['_'.join(col).strip() for col in x_train.columns.values]
+x_train.columns = x_train_flat_columns
+
+x_test_flat_columns = ['_'.join(col).strip() for col in x_train.columns.values]
+x_test.columns = x_train_flat_columns
 # Prepare data
 label_encoder = LabelEncoder()
 y_train_encoded = label_encoder.fit_transform(y_train_np.ravel()) #
