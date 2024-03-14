@@ -96,7 +96,7 @@ def objective(trial, X_sub, Y_sub):
 
     # Perform cross-validation
     cv_results = xgb.cv(params, dmatrix, num_boost_round=5000, nfold=5, stratified=True,
-                        early_stopping_rounds=25, seed=42, verbose_eval=False)
+                        early_stopping_rounds=15, seed=42, verbose_eval=False)
 
     # Extract the minimum mean merror from the CV results
     min_mean_merror = cv_results['test-merror-mean'].min()

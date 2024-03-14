@@ -1,0 +1,68 @@
+{
+    "chroma_cens": {
+        "max_depth": 29,
+        "eta": 0.06924138904126705,
+        "subsample": 0.7425472253941319,
+        "colsample_bytree": 0.6519295739265389
+    },
+    "chroma_cqt": {
+        "max_depth": 51,
+        "eta": 0.06621314151596726,
+        "subsample": 0.7945867150351127,
+        "colsample_bytree": 0.8911967772196282
+    },
+    "chroma_stft": {
+        "max_depth": 48,
+        "eta": 0.06569180206747532,
+        "subsample": 0.8447446633698458,
+        "colsample_bytree": 0.616452111531038
+    },
+    "mfcc": {
+        "max_depth": 35,
+        "eta": 0.06924153423905018,
+        "subsample": 0.7538227451386579,
+        "colsample_bytree": 0.9797664529405797
+    },
+    "rmse": {
+        "max_depth": 3,
+        "eta": 0.3884600081751063,
+        "subsample": 0.9049378382000673,
+        "colsample_bytree": 0.9378620510456337
+    },
+    "spectral_bandwidth": {
+        "max_depth": 3,
+        "eta": 0.09575223041825327,
+        "subsample": 0.7068806560819284,
+        "colsample_bytree": 0.967235330528023
+    },
+    "spectral_centroid": {
+        "max_depth": 5,
+        "eta": 0.22782034338873475,
+        "subsample": 0.6065605245863599,
+        "colsample_bytree": 0.6963502403947498
+    },
+    "spectral_contrast": {
+        "max_depth": 53,
+        "eta": 0.10326110118908728,
+        "subsample": 0.68272834693631,
+        "colsample_bytree": 0.7133244415789443
+    },
+    "spectral_rolloff": {
+        "max_depth": 6,
+        "eta": 0.03779384244465267,
+        "subsample": 0.7139907810706362,
+        "colsample_bytree": 0.9058990382730252
+    },
+    "tonnetz": {
+        "max_depth": 44,
+        "eta": 0.10768077393955201,
+        "subsample": 0.8435840375480921,
+        "colsample_bytree": 0.9832116292125431
+    },
+    "zcr": {
+        "max_depth": 5,
+        "eta": 0.06355360023544847,
+        "subsample": 0.7923052752850139,
+        "colsample_bytree": 0.7674439179460405
+    }
+}
