@@ -1,8 +1,6 @@
+import os
 import json
 import subprocess
-from datetime import datetime
-
-# Library Import
 import numpy as np
 import optuna
 import pandas as pd
@@ -10,6 +8,12 @@ import xgboost as xgb
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+from datetime import datetime
+
+# Set Model saving directory
+model_directory = "Models/XGBoost-Feature-Subsets"
+os.makedirs(model_directory, exist_ok=True)
+
 
 # Load the training data and the test inputs
 x_train = pd.read_csv('X_train.csv', index_col=0, header=[0, 1, 2])
@@ -87,7 +91,7 @@ def objective(trial, x_sub, y_sub):
         'objective': 'multi:softmax',
         'num_class': 8,
         'max_depth': trial.suggest_int('max_depth', 3, 60),
-        'eta': trial.suggest_float('eta', 0.01, 0.4),
+        'eta': trial.suggest_float('eta', 0.005, 0.4),
         'subsample': trial.suggest_float('subsample', 0.6, 1.0),
         'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
         'eval_metric': 'mlogloss'  # Multiclass Logloss
@@ -97,8 +101,8 @@ def objective(trial, x_sub, y_sub):
     train_dmatrix = xgb.DMatrix(x_sub, label=y_sub)
 
     # Perform cross-validation
-    cv_results = xgb.cv(tuning_params, train_dmatrix, num_boost_round=5000, nfold=5, stratified=True,
-                        early_stopping_rounds=35, seed=42, verbose_eval=False)
+    cv_results = xgb.cv(tuning_params, train_dmatrix, num_boost_round=5_000, nfold=5, stratified=True,
+                        early_stopping_rounds=15, seed=42, verbose_eval=False)
 
     # Extract the minimum mean mlogloss from the CV results
     min_mean_mlogloss = cv_results['test-mlogloss-mean'].min()
@@ -141,7 +145,7 @@ for feature_name, feature_count in feature_structure.items():
     dmatrix = xgb.DMatrix(X_sub_train, label=Y_sub_train)
     # Retrain
     print(f"Retraining the tuned model for feature subset: {feature_name}")
-    final_model = xgb.train(params, dmatrix, num_boost_round=10_000)
+    final_model = xgb.train(params, dmatrix, num_boost_round=15_000)
 
     # Evaluate the final model on the validation set
     dval = xgb.DMatrix(val_subsets[feature_name], label=Y_val)
@@ -153,9 +157,8 @@ for feature_name, feature_count in feature_structure.items():
     formatted_val_accuracy = f"{val_accuracy * 100:.1f}"
 
     # Save the final model
-    model_name = f"Models/XGBoost-Feature-Subsets/xgboost_{feature_name}_{formatted_val_accuracy}_accuracy.model"
+    model_name = f"{model_directory}/xgboost_{feature_name}_{formatted_val_accuracy}_accuracy.model"
     final_model.save_model(model_name)
-
     print(f"Validation accuracy for {feature_name}: {val_accuracy}")
     
 # Format the current date and time as a string

@@ -44,7 +44,7 @@ def objective(trial):
         'objective': 'multi:softmax',
         'num_class': 8,
         'max_depth': trial.suggest_int('max_depth', 3, 100),
-        'eta': trial.suggest_float('eta', 0.01, 0.4),
+        'eta': trial.suggest_float('eta', 0.005, 0.4),
         'subsample': trial.suggest_float('subsample', 0.6, 1.0),
         'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
     }
@@ -56,7 +56,7 @@ def objective(trial):
     # List to hold the validation sets
     evals = [(dtrain, 'train'), (dval, 'validation')]
     model = xgb.train(tuning_params, dtrain, num_boost_round=5_000, evals=evals,
-                      early_stopping_rounds=35, verbose_eval=False)
+                      early_stopping_rounds=15, verbose_eval=False)
 
     # Predictions on the validation set
     preds = model.predict(dval)
@@ -67,7 +67,7 @@ def objective(trial):
 
 # noinspection PyArgumentList
 study = optuna.create_study(direction='maximize', study_name="XGB")
-study.optimize(objective, n_trials=500)
+study.optimize(objective, n_trials=250)
 
 best_params = study.best_trial.params
 print('Best trial:', study.best_trial.params)
@@ -87,7 +87,7 @@ Y_train_val_combined = np.concatenate((Y_train, Y_val))
 dtrain_val_combined = xgb.DMatrix(X_train_val_combined, label=Y_train_val_combined)
 
 # Retrain the model on the full dataset with the best parameters
-final_model = xgb.train(params, dtrain_val_combined, num_boost_round=10_000)  # 5,000
+final_model = xgb.train(params, dtrain_val_combined, num_boost_round=15_000)  # 5,000
 
 # Evaluate on the fake test set
 dtest = xgb.DMatrix(X_test_scaled)
