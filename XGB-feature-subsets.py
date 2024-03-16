@@ -160,6 +160,7 @@ for feature_name, feature_count in feature_structure.items():
     model_name = f"{model_directory}/xgboost_{feature_name}_{formatted_val_accuracy}_accuracy.model"
     final_model.save_model(model_name)
     print(f"Validation accuracy for {feature_name}: {val_accuracy}")
+    current_feature_subset_index += 1
     
 # Format the current date and time as a string
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
