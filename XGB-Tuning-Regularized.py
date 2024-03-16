@@ -47,8 +47,8 @@ def objective(trial):
         'eta': trial.suggest_float('eta', 0.005, 0.4),
         'subsample': trial.suggest_float('subsample', 0.6, 1.0),
         'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
-        'lambda': trial.suggest_loguniform('lambda', 1e-8, 10.0),  # L2 regularization
-        'alpha': trial.suggest_loguniform('alpha', 1e-8, 10.0),  # L1 regularization
+        'lambda': trial.suggest_float('lambda', 1e-8, 10.0, log=True),  # L2 regularization
+        'alpha': trial.suggest_float('alpha', 1e-8, 10.0, log=True),  # L1 regularization
         'gamma': trial.suggest_float('gamma', 0.0, 5.0)  # Minimum loss reduction required for a split
     }
 
@@ -69,7 +69,7 @@ def objective(trial):
 
 
 # noinspection PyArgumentList
-study = optuna.create_study(direction='maximize', study_name="XGB")
+study = optuna.create_study(direction='maximize', study_name="XGB-regularized")
 study.optimize(objective, n_trials=150)
 
 best_params = study.best_trial.params
