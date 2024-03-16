@@ -1,0 +1,13 @@
+{
+    "chroma_cens": 0.3358333333333333,
+    "chroma_cqt": 0.37,
+    "chroma_stft": 0.38666666666666666,
+    "mfcc": 0.5541666666666667,
+    "rmse": 0.24333333333333335,
+    "spectral_bandwidth": 0.25916666666666666,
+    "spectral_centroid": 0.3025,
+    "spectral_contrast": 0.47,
+    "spectral_rolloff": 0.30583333333333335,
+    "tonnetz": 0.32166666666666666,
+    "zcr": 0.29083333333333333
+}
