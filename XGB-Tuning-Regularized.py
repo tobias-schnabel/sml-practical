@@ -45,17 +45,21 @@ def objective(trial):
     tuning_params = {
         'objective': 'multi:softmax',
         'num_class': 8,
-        'booster': trial.suggest_categorical('booster', ['dart', 'gbtree']),
-        'max_depth': trial.suggest_int('max_depth', 1, 31),
+        'booster': 'dart',
+        'max_depth': trial.suggest_int('max_depth', 4, 30),
         'eta': trial.suggest_float('eta', 0.005, 0.4),
         'subsample': trial.suggest_float('subsample', 0.6, 1.0),
         'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
         'lambda': trial.suggest_float('lambda', 1e-8, 10.0, log=True),
         'alpha': trial.suggest_float('alpha', 1e-8, 10.0, log=True),
         'gamma': trial.suggest_float('gamma', 0.0, 5.0),
-        'n_jobs': -1,
-        # 'tree_method': 'gpu_hist',
-        'eval_metric': 'mlogloss'
+        'n_jobs': -1,  # Use all available cores
+        'eval_metric': 'mlogloss',
+        # Additional dart parameters
+        'sample_type': trial.suggest_categorical('sample_type', ['uniform', 'weighted']),
+        'normalize_type': trial.suggest_categorical('normalize_type', ['tree', 'forest']),
+        'rate_drop': trial.suggest_float('rate_drop', 0.0, 1.0),
+        'skip_drop': trial.suggest_float('skip_drop', 0.0, 1.0)
     }
 
     dtrain = xgb.DMatrix(X_train_scaled, label=Y_train)
@@ -64,7 +68,7 @@ def objective(trial):
 
     # Pass num_boost_round to xgb.train
     model = xgb.train(tuning_params, dtrain, num_boost_round=num_boost_round, evals=evals,
-                      early_stopping_rounds=30, verbose_eval=False)
+                      early_stopping_rounds=15, verbose_eval=False)
 
     preds = model.predict(dval)
     accuracy = accuracy_score(Y_val, preds)
@@ -72,8 +76,8 @@ def objective(trial):
 
 
 # noinspection PyArgumentList
-study = optuna.create_study(direction='maximize', study_name="XGB-regularized")
-study.optimize(objective, n_trials=150)
+study = optuna.create_study(direction='maximize', study_name="XGB-dart")
+study.optimize(objective, n_trials=30)
 
 best_params = study.best_trial.params
 print('Best trial:', study.best_trial.params)
