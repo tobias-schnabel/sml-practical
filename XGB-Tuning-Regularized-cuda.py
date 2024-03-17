@@ -44,7 +44,7 @@ def objective(trial):
         'objective': 'multi:softmax',
         'num_class': 8,
         'booster': trial.suggest_categorical('booster', ['dart', 'gbtree']),
-        'max_depth': trial.suggest_int('max_depth', 5, 100),
+        'max_depth': trial.suggest_int('max_depth', 1, 31),
         'eta': trial.suggest_float('eta', 0.005, 0.4),
         'subsample': trial.suggest_float('subsample', 0.6, 1.0),
         'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
