@@ -39,45 +39,49 @@ X_real_test_scaled = scaler.transform(x_test)  # real test set we don't have lab
 
 
 def objective(trial):
-    # Suggest the number of boosting rounds
-    num_boost_round = trial.suggest_int('num_boost_round', 100, 1000)
-
+    # Hyperparameters to be tuned
     tuning_params = {
         'objective': 'multi:softmax',
         'num_class': 8,
-        'booster': 'dart',
-        'max_depth': trial.suggest_int('max_depth', 4, 30),
+        'booster': trial.suggest_categorical('booster', ['dart', 'gbtree']),
+        'max_depth': trial.suggest_int('max_depth', 5, 100),
         'eta': trial.suggest_float('eta', 0.005, 0.4),
         'subsample': trial.suggest_float('subsample', 0.6, 1.0),
         'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
         'lambda': trial.suggest_float('lambda', 1e-8, 10.0, log=True),
         'alpha': trial.suggest_float('alpha', 1e-8, 10.0, log=True),
         'gamma': trial.suggest_float('gamma', 0.0, 5.0),
-        'n_jobs': -1,  # Use all available cores
-        'eval_metric': 'mlogloss',
-        # Additional dart parameters
-        'sample_type': trial.suggest_categorical('sample_type', ['uniform', 'weighted']),
-        'normalize_type': trial.suggest_categorical('normalize_type', ['tree', 'forest']),
-        'rate_drop': trial.suggest_float('rate_drop', 0.0, 1.0),
-        'skip_drop': trial.suggest_float('skip_drop', 0.0, 1.0)
+        'n_jobs': -1,
+        'eval_metric': 'mlogloss'
     }
 
+    # If the booster is 'dart', we can add dart-specific parameters to tune
+    if tuning_params['booster'] == 'dart':
+        tuning_params['sample_type'] = trial.suggest_categorical('sample_type', ['uniform', 'weighted'])
+        tuning_params['normalize_type'] = trial.suggest_categorical('normalize_type', ['tree', 'forest'])
+        tuning_params['rate_drop'] = trial.suggest_float('rate_drop', 0.0, 1.0)
+        tuning_params['skip_drop'] = trial.suggest_float('skip_drop', 0.0, 1.0)
+
+    # Convert the dataset into DMatrix form
     dtrain = xgb.DMatrix(X_train_scaled, label=Y_train)
     dval = xgb.DMatrix(X_val_scaled, label=Y_val)
+
+    # List to hold the validation sets
     evals = [(dtrain, 'train'), (dval, 'validation')]
+    model = xgb.train(tuning_params, dtrain, num_boost_round=2500, evals=evals,
+                      early_stopping_rounds=25, verbose_eval=False)
 
-    # Pass num_boost_round to xgb.train
-    model = xgb.train(tuning_params, dtrain, num_boost_round=num_boost_round, evals=evals,
-                      early_stopping_rounds=15, verbose_eval=False)
-
+    # Predictions on the validation set
     preds = model.predict(dval)
     accuracy = accuracy_score(Y_val, preds)
+
     return accuracy
 
 
+
 # noinspection PyArgumentList
-study = optuna.create_study(direction='maximize', study_name="XGB-dart")
-study.optimize(objective, n_trials=30)
+study = optuna.create_study(direction='maximize', study_name="XGB-reg")
+study.optimize(objective, n_trials=100)
 
 best_params = study.best_trial.params
 print('Best trial:', study.best_trial.params)
@@ -100,7 +104,7 @@ Y_train_val_combined = np.concatenate((Y_train, Y_val))
 dtrain_val_combined = xgb.DMatrix(X_train_val_combined, label=Y_train_val_combined)
 
 # Retrain the model on the full dataset with the best parameters
-final_model = xgb.train(params, dtrain_val_combined, num_boost_round=best_num_boost_round)  # 5,000
+final_model = xgb.train(params, dtrain_val_combined, num_boost_round=10_000)  # 5,000
 
 # Evaluate on the fake test set
 dtest = xgb.DMatrix(X_test_scaled)

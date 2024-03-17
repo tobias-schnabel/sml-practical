@@ -58,7 +58,8 @@ def objective(trial):
         'lambda': trial.suggest_float('lambda', 1e-8, 10.0, log=True),
         'alpha': trial.suggest_float('alpha', 1e-8, 10.0, log=True),
         'gamma': trial.suggest_float('gamma', 0.0, 5.0),
-        'tree_method': 'gpu_hist',
+        'n_jobs': -1,
+        # 'tree_method': 'gpu_hist',
         'eval_metric': 'mlogloss'
     }
 

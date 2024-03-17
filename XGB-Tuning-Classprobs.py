@@ -1,6 +1,6 @@
 # Library Import
 import os
-os.environ["OMP_NUM_THREADS"] = "4" # Limit to 4 cores
+os.environ["OMP_NUM_THREADS"] = "4"  # Limit to 4 cores
 import subprocess
 import numpy as np
 import pandas as pd
