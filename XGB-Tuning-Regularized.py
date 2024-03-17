@@ -51,7 +51,7 @@ def objective(trial):
         'lambda': trial.suggest_float('lambda', 1e-8, 10.0, log=True),
         'alpha': trial.suggest_float('alpha', 1e-8, 10.0, log=True),
         'gamma': trial.suggest_float('gamma', 0.0, 5.0),
-        'n_jobs': -1,
+        'n_jobs': 6,
         'eval_metric': 'mlogloss'
     }
 
@@ -94,7 +94,6 @@ params = {
 # Update model parameters
 params.update(best_params)
 # Extract the best number of boosting rounds
-best_num_boost_round = best_params['num_boost_round']
 
 # Merge train and val set to retrain on maximal amount of data possible
 X_train_val_combined = np.vstack((X_train_scaled, X_val_scaled))
