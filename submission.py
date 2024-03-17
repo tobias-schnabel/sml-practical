@@ -2,18 +2,19 @@
 import getpass
 import os
 from collections import Counter
+
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FormatStrFormatter
-from matplotlib.ticker import FuncFormatter
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+import xgboost as xgb
+from matplotlib.ticker import FuncFormatter
+from sklearn.decomposition import PCA
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
-import xgboost as xgb
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 export_username = "ts"  # Only save plots to dropbox on right machine
 
@@ -88,11 +89,11 @@ pca = PCA(n_components=0.95)
 X_train_pca = pca.fit_transform(X_train_scaled)
 idx_full_80 = np.where(np.cumsum(pca.explained_variance_ratio_) >= 0.8)[0][0]
 idx_full_90 = np.where(np.cumsum(pca.explained_variance_ratio_) >= 0.9)[0][0]
-plt.figure(figsize=(10, 6))
+pcaplot = plt.figure(figsize=(10, 6))
 
 # Plot the cumulative explained variance
 cumulative_variance = np.cumsum(pca.explained_variance_ratio_)
-pcaplot = plt.plot(cumulative_variance)
+plt.plot(cumulative_variance)
 plt.xlabel('Number of Components')
 plt.ylabel('Cumulative Explained Variance')
 plt.title('PCA Cumulative Explained Variance')
@@ -138,6 +139,17 @@ sns.set(font_scale=1.6)  # Adjust the font scale for better readability
 plt.tight_layout()
 
 save_plot(box1, "boxplot-1")
+
+# Correlation matrix
+df_corr = X_train.filter(like='spectral_contrast')
+corr_mat = df_corr.corr()
+cormat = plt.figure(figsize=(13, 13))
+sns.heatmap(corr_mat, cmap='viridis')
+plt.xticks(rotation=45, ha='right')  # Rotate x-axis labels
+plt.xlabel('')  # Remove x-axis title
+plt.ylabel('')  # Remove y-axis title
+plt.tight_layout()
+save_plot(cormat, "correlation")
 
 # Load best XGB model
 final_model_name = 'Models/xgboost-63.7-all-data'
