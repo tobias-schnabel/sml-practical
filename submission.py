@@ -82,6 +82,34 @@ X_real_test_scaled = scaler.transform(x_test)  # real test to generate submissio
 
 
 # Make EDA Plots
+
+# PCA Plot
+pca = PCA(n_components=0.95)
+X_train_pca = pca.fit_transform(X_train_scaled)
+idx_full_80 = np.where(np.cumsum(pca.explained_variance_ratio_) >= 0.8)[0][0]
+idx_full_90 = np.where(np.cumsum(pca.explained_variance_ratio_) >= 0.9)[0][0]
+plt.figure(figsize=(10, 6))
+
+# Plot the cumulative explained variance
+cumulative_variance = np.cumsum(pca.explained_variance_ratio_)
+pcaplot = plt.plot(cumulative_variance)
+plt.xlabel('Number of Components')
+plt.ylabel('Cumulative Explained Variance')
+plt.title('PCA Cumulative Explained Variance')
+plt.yticks(np.arange(0, 1, step=0.1))
+
+y_80 = cumulative_variance[idx_full_80]
+y_90 = cumulative_variance[idx_full_90]
+plt.axvline(x=idx_full_80, ymax=y_80, color='red', linestyle='--')
+plt.axhline(y=y_80, xmax=idx_full_80/len(cumulative_variance), color='red', linestyle='--')
+plt.axvline(x=idx_full_90, ymax=y_90, color='green', linestyle='--')
+plt.axhline(y=y_90, xmax=idx_full_90/len(cumulative_variance), color='green', linestyle='--')
+plt.scatter(idx_full_80, y_80, color='red', label='80% variance')
+plt.scatter(idx_full_90, y_90, color='green', label='90% variance')
+
+plt.legend(loc='best')
+save_plot(pcaplot, "pca")
+
 # Class Balance Plot
 viridis_colors = plt.cm.viridis(np.linspace(0, 1, 8))
 custom_palette = [matplotlib.colors.rgb2hex(color) for color in viridis_colors]
