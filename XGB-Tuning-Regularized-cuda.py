@@ -51,15 +51,10 @@ def objective(trial):
         'lambda': trial.suggest_float('lambda', 1e-8, 10.0, log=True),
         'alpha': trial.suggest_float('alpha', 1e-8, 10.0, log=True),
         'gamma': trial.suggest_float('gamma', 0.0, 5.0),
-        'tree_method': 'gpu_hist'
+        'tree_method': 'gpu_hist',
+        'eval_metric': 'mlogloss',
+        'verbosity': 2  # Increase verbosity to print more information
     }
-
-    # If the booster is 'dart', we can add dart-specific parameters to tune
-    if tuning_params['booster'] == 'dart':
-        tuning_params['sample_type'] = trial.suggest_categorical('sample_type', ['uniform', 'weighted'])
-        tuning_params['normalize_type'] = trial.suggest_categorical('normalize_type', ['tree', 'forest'])
-        tuning_params['rate_drop'] = trial.suggest_float('rate_drop', 0.0, 1.0)
-        tuning_params['skip_drop'] = trial.suggest_float('skip_drop', 0.0, 1.0)
 
     # Convert the dataset into DMatrix form
     dtrain = xgb.DMatrix(X_train_scaled, label=Y_train)
@@ -68,13 +63,14 @@ def objective(trial):
     # List to hold the validation sets
     evals = [(dtrain, 'train'), (dval, 'validation')]
     model = xgb.train(tuning_params, dtrain, num_boost_round=5_000, evals=evals,
-                      early_stopping_rounds=30, verbose_eval=False)
+                      early_stopping_rounds=30, verbose_eval=True)  # Set to True for more detailed output
 
     # Predictions on the validation set
     preds = model.predict(dval)
     accuracy = accuracy_score(Y_val, preds)
 
     return accuracy
+
 
 
 
