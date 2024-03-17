@@ -38,6 +38,11 @@ X_test_scaled = scaler.transform(X_test)
 X_real_test_scaled = scaler.transform(x_test)  # real test set we don't have labels for
 
 
+def print_trial_info(study, trial):
+    # This callback function prints information about each trial.
+    print(f"Trial {trial.number} finished with value: {trial.value}")
+
+
 def objective(trial):
     # Suggest the number of boosting rounds
     num_boost_round = trial.suggest_int('num_boost_round', 100, 1000)
@@ -63,7 +68,7 @@ def objective(trial):
 
     # Pass num_boost_round to xgb.train
     model = xgb.train(tuning_params, dtrain, num_boost_round=num_boost_round, evals=evals,
-                      early_stopping_rounds=30, verbose_eval=True)
+                      early_stopping_rounds=30, verbose_eval=False)
 
     preds = model.predict(dval)
     accuracy = accuracy_score(Y_val, preds)
@@ -72,7 +77,7 @@ def objective(trial):
 
 # noinspection PyArgumentList
 study = optuna.create_study(direction='maximize', study_name="XGB-regularized")
-study.optimize(objective, n_trials=150)
+study.optimize(objective, n_trials=150, callbacks=[print_trial_info])
 
 best_params = study.best_trial.params
 print('Best trial:', study.best_trial.params)
