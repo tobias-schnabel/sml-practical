@@ -39,7 +39,9 @@ X_real_test_scaled = scaler.transform(x_test)  # real test set we don't have lab
 
 
 def objective(trial):
-    # Hyperparameters to be tuned
+    # Suggest the number of boosting rounds
+    num_boost_round = trial.suggest_int('num_boost_round', 100, 1000)
+
     tuning_params = {
         'objective': 'multi:softmax',
         'num_class': 8,
@@ -52,26 +54,20 @@ def objective(trial):
         'alpha': trial.suggest_float('alpha', 1e-8, 10.0, log=True),
         'gamma': trial.suggest_float('gamma', 0.0, 5.0),
         'tree_method': 'gpu_hist',
-        'eval_metric': 'mlogloss',
-        'verbosity': 2  # Increase verbosity to print more information
+        'eval_metric': 'mlogloss'
     }
 
-    # Convert the dataset into DMatrix form
     dtrain = xgb.DMatrix(X_train_scaled, label=Y_train)
     dval = xgb.DMatrix(X_val_scaled, label=Y_val)
-
-    # List to hold the validation sets
     evals = [(dtrain, 'train'), (dval, 'validation')]
-    model = xgb.train(tuning_params, dtrain, num_boost_round=5_000, evals=evals,
-                      early_stopping_rounds=30, verbose_eval=True)  # Set to True for more detailed output
 
-    # Predictions on the validation set
+    # Pass num_boost_round to xgb.train
+    model = xgb.train(tuning_params, dtrain, num_boost_round=num_boost_round, evals=evals,
+                      early_stopping_rounds=30, verbose_eval=True)
+
     preds = model.predict(dval)
     accuracy = accuracy_score(Y_val, preds)
-
     return accuracy
-
-
 
 
 # noinspection PyArgumentList
@@ -85,8 +81,11 @@ params = {
     'num_class': 8,
 }
 
+
 # Update model parameters
 params.update(best_params)
+# Extract the best number of boosting rounds
+best_num_boost_round = best_params['num_boost_round']
 
 # Merge train and val set to retrain on maximal amount of data possible
 X_train_val_combined = np.vstack((X_train_scaled, X_val_scaled))
@@ -96,7 +95,7 @@ Y_train_val_combined = np.concatenate((Y_train, Y_val))
 dtrain_val_combined = xgb.DMatrix(X_train_val_combined, label=Y_train_val_combined)
 
 # Retrain the model on the full dataset with the best parameters
-final_model = xgb.train(params, dtrain_val_combined, num_boost_round=15_000)  # 5,000
+final_model = xgb.train(params, dtrain_val_combined, num_boost_round=best_num_boost_round)  # 5,000
 
 # Evaluate on the fake test set
 dtest = xgb.DMatrix(X_test_scaled)
