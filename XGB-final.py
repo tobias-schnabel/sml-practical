@@ -65,9 +65,9 @@ def objective(trial):
     tuning_params = {
         'objective': 'multi:softmax',
         'num_class': 8,
-        'tree_method': 'hist',
+        'tree_method': 'exact',  # hist
         'eval_metric' : 'mlogloss',
-        'max_bin': 40,
+        # 'max_bin': 40,
         'max_depth': trial.suggest_int('max_depth', 3, 100),
         'eta': trial.suggest_float('eta', 0.01, 0.4),
         'subsample': trial.suggest_float('subsample', 0.6, 0.9),
@@ -143,7 +143,7 @@ best_boosting_rounds = cv_results.shape[0]
 additional_rounds = max(0, (best_boosting_rounds - num_round))
 print(f"Best number of boosting rounds determined by cross-validation: {best_boosting_rounds}")
 print(f"Continuing training of best model for additional {additional_rounds} rounds")
-params.update({'max_bin': 500})
+# params.update({'max_bin': 500})
 # Retrain the model on the full dataset with the best parameters
 final_model = xgb.train(
     xgb_model=best_model,
