@@ -51,6 +51,7 @@ model_paths = []
 model_dir = "Model-trials"
 os.makedirs(model_dir, exist_ok=True)
 
+
 def objective(trial):
     # Hyperparameters to be tuned
     tuning_params = {
@@ -80,8 +81,9 @@ def objective(trial):
     # Predictions on the validation set
     preds = model.predict(dval)
     accuracy = accuracy_score(Y_val, preds)
+    formatted_accuracy = f"{accuracy:.3f}"
 
-    return accuracy
+    return formatted_accuracy
 
 
 # noinspection PyArgumentList
@@ -116,7 +118,7 @@ dtest_es = xgb.DMatrix(X_test_scaled, label=Y_test)
 # noinspection PyTypeChecker
 final_boostrounds = 9_000
 print(f"Continuing training on best model with {final_boostrounds} additional boosting rounds")
-retrain_evals = [(dtrainval, 'combined'), (dtest_es, 'pseudotest')] #[(dtrain, 'train'), (dval, 'validation')]
+retrain_evals = [(dtrainval, 'combined'), (dtest_es, 'pseudotest')]
 final_model = xgb.train(dtrain=dtrainval, params=params, xgb_model=best_model, num_boost_round=final_boostrounds,
                         evals=retrain_evals, verbose_eval=500, early_stopping_rounds=500)
 
@@ -133,8 +135,9 @@ final_model.save_model(f'Models/xgboost-{formatted_test_accuracy}')
 print(f"Final Model saved (Models/xgboost-{formatted_test_accuracy})")
 print("Deleting intermediate model files")
 shutil.rmtree(model_dir)
+
 # Run git commands to add the saved model file, commit, and push
-# final_model_file_path = f'Models/xgboost-{formatted_test_accuracy}'
-# subprocess.run(['git', 'add', final_model_file_path], check=True)
-# subprocess.run(['git', 'commit', '-m', 'tuning of xgb on all features completed'], check=True)
-# subprocess.run(['git', 'push', 'origin', 'HEAD'], check=True)
+final_model_file_path = f'Models/xgboost-{formatted_test_accuracy}'
+subprocess.run(['git', 'add', final_model_file_path], check=True)
+subprocess.run(['git', 'commit', '-m', 'tuning of xgb on all features completed'], check=True)
+subprocess.run(['git', 'push', 'origin', 'HEAD'], check=True)
