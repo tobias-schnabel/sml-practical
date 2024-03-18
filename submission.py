@@ -1,6 +1,7 @@
 # Library Import
 import getpass
 import os
+import shutil
 from collections import Counter
 
 import matplotlib
@@ -187,7 +188,7 @@ importanceplots, axs = plt.subplots(nrows=2, ncols=2, figsize=(16, 12), constrai
 
 # Define importance types and corresponding titles
 importance_types = ['weight', 'gain', 'cover', 'total_gain']
-titles = ['Feature Importance: Weight', 'Feature Importance: Gain', 'Feature Importance: Cover', 'Feature Importance: Total Gain']
+titles = ['Weight', 'Gain', 'Cover', 'Total Gain']
 
 # Plot importance for each type
 for i, ax in enumerate(axs.flat):
@@ -253,4 +254,9 @@ sns.heatmap(class_report_df, cmap='viridis', cbar=True, fmt='.2g',
 plt.title('Classification Report Heatmap')
 plt.ylabel('Class Label')
 plt.xlabel('Metrics')
+heatmap.subplots_adjust(left=0.2)
 save_plot(heatmap, "XGB-Heatmap")
+
+# Copy code to overleaf
+shutil.copy('submission.py', '/Users/ts/Library/CloudStorage/Dropbox/Apps/Overleaf/SML Practical/Code')
+print("Source Code copied to Overleaf")
