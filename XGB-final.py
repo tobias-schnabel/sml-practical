@@ -81,9 +81,9 @@ def objective(trial):
     # Predictions on the validation set
     preds = model.predict(dval)
     accuracy = accuracy_score(Y_val, preds)
-    formatted_accuracy = f"{accuracy:.3f}"
+    # formatted_accuracy = f"{accuracy:.3f}"
 
-    return formatted_accuracy
+    return accuracy
 
 
 # noinspection PyArgumentList
