@@ -52,28 +52,37 @@ model_dir = "Model-trials"
 os.makedirs(model_dir, exist_ok=True)
 
 
+# Prepare Data
+# Convert the dataset into DMatrix form
+dtrain = xgb.DMatrix(X_train_scaled, label=Y_train)
+dval = xgb.DMatrix(X_val_scaled, label=Y_val)
+
+# List to hold the validation sets
+evals = [(dtrain, 'train'), (dval, 'validation')]
+
+
 def objective(trial):
     # Hyperparameters to be tuned
     tuning_params = {
         'objective': 'multi:softmax',
         'num_class': 8,
-        'max_depth': trial.suggest_int('max_depth', 3, 60),
+        'tree_method': 'hist',
+        'max_bin': 200,
+        'max_depth': trial.suggest_int('max_depth', 3, 70),
         'eta': trial.suggest_float('eta', 0.01, 0.4),
-        'subsample': trial.suggest_float('subsample', 0.6, 1.0),
-        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
-        'lambda': trial.suggest_float('lambda', 1e-8, 1e5, log=True),
-        'alpha': trial.suggest_float('alpha', 1e-8, 1e5, log=True),
-        'gamma': trial.suggest_float('gamma', 1e-8, 1e5, log=True),
+        'subsample': trial.suggest_float('subsample', 0.6, 0.8),
+        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 0.8),
+        'lambda': trial.suggest_float('lambda', 1e-3, 1e5, log=True),
+        'alpha': trial.suggest_float('alpha', 1e-3, 1e5, log=True),
+        'gamma': trial.suggest_float('gamma', 1e-3, 1e5, log=True),
     }
 
-    # Convert the dataset into DMatrix form
-    dtrain = xgb.DMatrix(X_train_scaled, label=Y_train)
-    dval = xgb.DMatrix(X_val_scaled, label=Y_val)
-
-    # List to hold the validation sets
-    evals = [(dtrain, 'train'), (dval, 'validation')]
-    model = xgb.train(tuning_params, dtrain, num_boost_round=1_000, evals=evals,
-                      early_stopping_rounds=15, verbose_eval=False)
+    model = xgb.train(params=tuning_params,
+                      dtrain=dtrain,
+                      num_boost_round=300,
+                      evals=evals,
+                      early_stopping_rounds=15,
+                      verbose_eval=False)
 
     # Save the model to a unique file in the specified directory
     model_file_path = os.path.join("Model-trials", f"model_trial_{trial.number}.bin")
@@ -112,12 +121,13 @@ params.update(best_params)
 X_train_val_combined = np.vstack((X_train_scaled, X_val_scaled))
 Y_train_val_combined = np.concatenate((Y_train, Y_val))
 
-final_boostrounds = 9_000
+final_boostrounds = 10_000
 # Convert the combined dataset into DMatrix form for XGBoost
 dtrainval = xgb.DMatrix(X_train_val_combined, label=Y_train_val_combined)
 
 # noinspection PyTypeChecker
 cv_results = xgb.cv(
+    xgb_model=
     params=params,
     dtrain=dtrainval,
     num_boost_round=final_boostrounds,
