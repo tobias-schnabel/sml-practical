@@ -47,9 +47,9 @@ def objective(trial):
         'eta': trial.suggest_float('eta', 0.3, 0.4),
         'subsample': trial.suggest_float('subsample', 0.8, 1.0),
         'colsample_bytree': trial.suggest_float('colsample_bytree', 0.8, 1.0),
-        'lambda': trial.suggest_float('lambda', 0.0, 4.0),
-        'alpha': trial.suggest_float('alpha', 0.0, 4.0),
-        'gamma': trial.suggest_float('gamma', 0.5, 5.0),
+        'lambda': trial.suggest_float('lambda', 1e-8, 1e5, log=True),
+        'alpha': trial.suggest_float('alpha', 1e-8, 1e5, log=True),
+        'gamma': trial.suggest_float('gamma', 1e-8, 1e5, log=True),
         'n_jobs': -1,
     }
 
@@ -91,7 +91,7 @@ Y_train_val_combined = np.concatenate((Y_train, Y_val))
 
 # Convert the combined dataset into DMatrix form for XGBoost
 dtrain_val_combined = xgb.DMatrix(X_train_val_combined, label=Y_train_val_combined)
-print(f"retraining on combined train-val set for {best_iteration} boosting rounds"}
+print(f"retraining on combined train-val set for {best_iteration} boosting rounds")
 final_model = xgb.train(params, dtrain_val_combined, num_boost_round=best_iteration)
 
 # Evaluate on the fake test set
@@ -106,7 +106,7 @@ formatted_test_accuracy = f"{test_accuracy * 100:.1f}"
 final_model.save_model(f'Models/xgboost-{formatted_test_accuracy}%')
 
 # Run git commands to add the saved model file, commit, and push
-model_file_path = f'Models/xgboost-{formatted_test_accuracy}-all-data'
+model_file_path = f'Models/xgboost-{formatted_test_accuracy}'
 subprocess.run(['git', 'add', model_file_path], check=True)
 subprocess.run(['git', 'commit', '-m', 'tuning of xgb on all features completed'], check=True)
 subprocess.run(['git', 'push', 'origin', 'HEAD'], check=True)
