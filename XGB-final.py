@@ -67,7 +67,7 @@ def objective(trial):
         'num_class': 8,
         'tree_method': 'hist',
         'max_bin': 200,
-        'max_depth': trial.suggest_int('max_depth', 3, 70),
+        'max_depth': trial.suggest_int('max_depth', 3, 100),
         'eta': trial.suggest_float('eta', 0.01, 0.4),
         'subsample': trial.suggest_float('subsample', 0.6, 0.8),
         'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 0.8),
@@ -138,21 +138,25 @@ cv_results = xgb.cv(
 
 # Determine the best number of boosting rounds
 best_boosting_rounds = cv_results.shape[0]
-additional_rounds = max(0, (best_boosting_rounds - num_round + 50))
+additional_rounds = max(0, (best_boosting_rounds - num_round))
 print(f"Best number of boosting rounds determined by cross-validation: {best_boosting_rounds}")
-print(f"Continuing training of best model for additional {best_boosting_rounds}")
-
+print(f"Continuing training of best model for additional {additional_rounds}")
+params.update({'max_bin': 500})
 # Retrain the model on the full dataset with the best parameters
 final_model = xgb.train(
     xgb_model=best_model,
     params=params,
     dtrain=dtrainval,
-    num_boost_round=best_boosting_rounds,
+    num_boost_round=additional_rounds,
     verbose_eval=500
 )
 
+# Evaluate on the training set
+train_preds = final_model.predict(dtrain)
+train_accuracy = accuracy_score(Y_train, train_preds)
+print(f"Training set accuracy: {train_accuracy}")
 
-# Evaluate on the fake test set
+# Evaluate on the pseudo test set
 dtest = xgb.DMatrix(X_test_scaled)
 test_preds = final_model.predict(dtest)
 test_accuracy = accuracy_score(Y_test, test_preds)
