@@ -86,7 +86,7 @@ def objective(trial):
 
 # noinspection PyArgumentList
 study = optuna.create_study(direction='maximize', study_name="XGB")
-study.optimize(objective, n_trials=2)
+study.optimize(objective, n_trials=50)
 
 best_model_path = model_paths[study.best_trial.number]
 print(f"Best model saved at: {best_model_path}")
