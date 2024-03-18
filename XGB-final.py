@@ -66,14 +66,14 @@ def objective(trial):
         'objective': 'multi:softmax',
         'num_class': 8,
         'tree_method': 'hist',
-        'max_bin': 200,
+        'max_bin': 40,
         'max_depth': trial.suggest_int('max_depth', 3, 100),
         'eta': trial.suggest_float('eta', 0.01, 0.4),
-        'subsample': trial.suggest_float('subsample', 0.6, 0.8),
-        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 0.8),
-        'lambda': trial.suggest_float('lambda', 1e-3, 1e5, log=True),
-        'alpha': trial.suggest_float('alpha', 1e-3, 1e5, log=True),
-        'gamma': trial.suggest_float('gamma', 1e-3, 1e5, log=True),
+        'subsample': trial.suggest_float('subsample', 0.6, 0.9),
+        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 0.9),
+        'lambda': trial.suggest_float('lambda', 1e-4, 1e5, log=True),
+        'alpha': trial.suggest_float('alpha', 1e-4, 1e5, log=True),
+        'gamma': trial.suggest_float('gamma', 1e-4, 1e5, log=True),
     }
 
     model = xgb.train(params=tuning_params,
@@ -101,6 +101,7 @@ def objective(trial):
 study = optuna.create_study(direction='maximize', study_name="XGB-regularized")
 study.optimize(objective, n_trials=50)
 
+time.sleep(2)
 best_model_path = model_paths[study.best_trial.number]
 print(f"Best model saved at: {best_model_path}")
 best_model = xgb.Booster()
@@ -124,23 +125,24 @@ final_boostrounds = 10_000
 # Convert the combined dataset into DMatrix form for XGBoost
 dtrainval = xgb.DMatrix(X_train_val_combined, label=Y_train_val_combined)
 
+print("Determining optimal number of additional bossting rounds using CV")
 # noinspection PyTypeChecker
 cv_results = xgb.cv(
     params=params,
     dtrain=dtrainval,
     num_boost_round=final_boostrounds,
     nfold=3,
-    metrics={'mlogloss'},  # maybe merror?
+    metrics={'merror'},  # maybe merror?
     early_stopping_rounds=200,
     seed=42,
-    verbose_eval=500
+    verbose_eval=100
 )
 
 # Determine the best number of boosting rounds
 best_boosting_rounds = cv_results.shape[0]
 additional_rounds = max(0, (best_boosting_rounds - num_round))
 print(f"Best number of boosting rounds determined by cross-validation: {best_boosting_rounds}")
-print(f"Continuing training of best model for additional {additional_rounds}")
+print(f"Continuing training of best model for additional {additional_rounds} rounds")
 params.update({'max_bin': 500})
 # Retrain the model on the full dataset with the best parameters
 final_model = xgb.train(
@@ -148,7 +150,7 @@ final_model = xgb.train(
     params=params,
     dtrain=dtrainval,
     num_boost_round=additional_rounds,
-    verbose_eval=500
+    verbose_eval=100
 )
 
 # Evaluate on the training set
