@@ -58,9 +58,12 @@ def objective(trial):
         'objective': 'multi:softmax',
         'num_class': 8,
         'max_depth': trial.suggest_int('max_depth', 3, 60),
-        'eta': trial.suggest_float('eta', 0.005, 0.4),
+        'eta': trial.suggest_float('eta', 0.01, 0.4),
         'subsample': trial.suggest_float('subsample', 0.6, 1.0),
         'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
+        'lambda': trial.suggest_float('lambda', 1e-8, 1e5, log=True),
+        'alpha': trial.suggest_float('alpha', 1e-8, 1e5, log=True),
+        'gamma': trial.suggest_float('gamma', 1e-8, 1e5, log=True),
     }
 
     # Convert the dataset into DMatrix form
@@ -87,7 +90,7 @@ def objective(trial):
 
 
 # noinspection PyArgumentList
-study = optuna.create_study(direction='maximize', study_name="XGB")
+study = optuna.create_study(direction='maximize', study_name="XGB-regularized")
 study.optimize(objective, n_trials=50)
 
 best_model_path = model_paths[study.best_trial.number]
@@ -109,18 +112,34 @@ params.update(best_params)
 X_train_val_combined = np.vstack((X_train_scaled, X_val_scaled))
 Y_train_val_combined = np.concatenate((Y_train, Y_val))
 
+final_boostrounds = 9_000
 # Convert the combined dataset into DMatrix form for XGBoost
 dtrainval = xgb.DMatrix(X_train_val_combined, label=Y_train_val_combined)
-dtrain = xgb.DMatrix(X_train_scaled, label=Y_train)
-dval = xgb.DMatrix(X_val_scaled, label=Y_val)
-dtest_es = xgb.DMatrix(X_test_scaled, label=Y_test)
-# Retrain the model on the full dataset with the best parameters
+
 # noinspection PyTypeChecker
-final_boostrounds = 9_000
-print(f"Continuing training on best model with {final_boostrounds} additional boosting rounds")
-retrain_evals = [(dtrainval, 'combined'), (dtest_es, 'pseudotest')]
-final_model = xgb.train(dtrain=dtrainval, params=params, xgb_model=best_model, num_boost_round=final_boostrounds,
-                        evals=retrain_evals, verbose_eval=500, early_stopping_rounds=500)
+cv_results = xgb.cv(
+    params=params,
+    dtrain=dtrainval,
+    num_boost_round=final_boostrounds,
+    nfold=3,
+    metrics={'mlogloss'},  # maybe merror?
+    early_stopping_rounds=200,
+    seed=42,
+    verbose_eval=500
+)
+
+# Determine the best number of boosting rounds
+best_boosting_rounds = cv_results.shape[0]
+print(f"Best number of boosting rounds determined by cross-validation: {best_boosting_rounds}")
+
+# Retrain the model on the full dataset with the best parameters
+final_model = xgb.train(
+    params=params,
+    dtrain=dtrainval,
+    num_boost_round=best_boosting_rounds,
+    verbose_eval=500
+)
+
 
 # Evaluate on the fake test set
 dtest = xgb.DMatrix(X_test_scaled)
@@ -131,13 +150,13 @@ print(f"Test set accuracy: {test_accuracy}")
 # Format val_accuracy to percent with 1 decimal place
 formatted_test_accuracy = f"{test_accuracy * 100:.1f}"
 
-final_model.save_model(f'Models/xgboost-{formatted_test_accuracy}')
-print(f"Final Model saved (Models/xgboost-{formatted_test_accuracy})")
+final_model.save_model(f'Models/xgboost-reg-{formatted_test_accuracy}')
+print(f"Final Model saved (Models/xgboost-reg-{formatted_test_accuracy})")
 print("Deleting intermediate model files")
 shutil.rmtree(model_dir)
 
 # Run git commands to add the saved model file, commit, and push
-final_model_file_path = f'Models/xgboost-{formatted_test_accuracy}'
+final_model_file_path = f'Models/xgboost-reg-{formatted_test_accuracy}'
 subprocess.run(['git', 'add', final_model_file_path], check=True)
-subprocess.run(['git', 'commit', '-m', 'tuning of xgb on all features completed'], check=True)
+subprocess.run(['git', 'commit', '-m', 'tuning of regularized xgb on all features completed'], check=True)
 subprocess.run(['git', 'push', 'origin', 'HEAD'], check=True)
