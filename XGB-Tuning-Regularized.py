@@ -44,10 +44,10 @@ def objective(trial):
         'objective': 'multi:softmax',
         'num_class': 8,
         'booster': trial.suggest_categorical('booster', ['dart', 'gbtree']),
-        'max_depth': trial.suggest_int('max_depth', 5, 100),
-        'eta': trial.suggest_float('eta', 0.005, 0.4),
-        'subsample': trial.suggest_float('subsample', 0.6, 1.0),
-        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
+        'max_depth': trial.suggest_int('max_depth', 5, 30),
+        'eta': trial.suggest_float('eta', 0.2, 0.4),
+        'subsample': trial.suggest_float('subsample', 0.8, 1.0),
+        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.8, 1.0),
         'lambda': trial.suggest_float('lambda', 1e-8, 10.0, log=True),
         'alpha': trial.suggest_float('alpha', 1e-8, 10.0, log=True),
         'gamma': trial.suggest_float('gamma', 0.0, 5.0),
@@ -68,8 +68,8 @@ def objective(trial):
 
     # List to hold the validation sets
     evals = [(dtrain, 'train'), (dval, 'validation')]
-    model = xgb.train(tuning_params, dtrain, num_boost_round=2500, evals=evals,
-                      early_stopping_rounds=25, verbose_eval=False)
+    model = xgb.train(tuning_params, dtrain, num_boost_round=1_000, evals=evals,
+                      early_stopping_rounds=15, verbose_eval=False)
 
     # Predictions on the validation set
     preds = model.predict(dval)
@@ -78,10 +78,9 @@ def objective(trial):
     return accuracy
 
 
-
 # noinspection PyArgumentList
 study = optuna.create_study(direction='maximize', study_name="XGB-reg")
-study.optimize(objective, n_trials=100)
+study.optimize(objective, n_trials=60)
 
 best_params = study.best_trial.params
 print('Best trial:', study.best_trial.params)
@@ -114,7 +113,11 @@ print(f"Test set accuracy: {test_accuracy}")
 # Format val_accuracy to percent with 1 decimal place
 formatted_test_accuracy = f"{test_accuracy * 100:.1f}"
 
-final_model.save_model(f'Models/xgboost-regularized-{formatted_test_accuracy}-all-data')
+final_model.save_model(f'Models/xgboost-regularized-{formatted_test_accuracy}-all-data')  # save model object
+config_json = final_model.save_config()  # save model parameters
+config_file_path = f'Models/xgboost-regularized-{formatted_test_accuracy}-all-data.json'
+with open(config_file_path, 'w') as file:  # Write the JSON string to a file
+    file.write(config_json)
 
 # Run git commands to add the saved model file, commit, and push
 subprocess.run(['git', 'pull'], check=True)
