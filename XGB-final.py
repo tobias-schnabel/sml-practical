@@ -1,6 +1,7 @@
 # Library Import
 import subprocess
 import os
+import time
 import shutil
 import numpy as np
 import pandas as pd
@@ -40,12 +41,6 @@ X_test_scaled = scaler.transform(X_test)
 X_real_test_scaled = scaler.transform(x_test)  # real test set we don't have labels for
 
 
-def print_round_callback(env):
-    # env is the callback environment, it contains information about the training state
-    if env.iteration % 1000 == 0 and env.iteration > 0:
-        print(f"Boosting round: {env.iteration}")
-
-
 # Initialize an empty list to hold the model file paths
 model_paths = []
 model_dir = "Model-trials"
@@ -59,6 +54,10 @@ dval = xgb.DMatrix(X_val_scaled, label=Y_val)
 
 # List to hold the validation sets
 evals = [(dtrain, 'train'), (dval, 'validation')]
+# Set number of boosting rounds
+num_round = 300
+
+start_time = time.time()  # start execution timing
 
 
 def objective(trial):
@@ -79,7 +78,7 @@ def objective(trial):
 
     model = xgb.train(params=tuning_params,
                       dtrain=dtrain,
-                      num_boost_round=300,
+                      num_boost_round=num_round,
                       evals=evals,
                       early_stopping_rounds=15,
                       verbose_eval=False)
@@ -127,7 +126,6 @@ dtrainval = xgb.DMatrix(X_train_val_combined, label=Y_train_val_combined)
 
 # noinspection PyTypeChecker
 cv_results = xgb.cv(
-    xgb_model=
     params=params,
     dtrain=dtrainval,
     num_boost_round=final_boostrounds,
@@ -140,10 +138,13 @@ cv_results = xgb.cv(
 
 # Determine the best number of boosting rounds
 best_boosting_rounds = cv_results.shape[0]
+additional_rounds = max(0, (best_boosting_rounds - num_round + 50))
 print(f"Best number of boosting rounds determined by cross-validation: {best_boosting_rounds}")
+print(f"Continuing training of best model for additional {best_boosting_rounds}")
 
 # Retrain the model on the full dataset with the best parameters
 final_model = xgb.train(
+    xgb_model=best_model,
     params=params,
     dtrain=dtrainval,
     num_boost_round=best_boosting_rounds,
@@ -164,9 +165,15 @@ final_model.save_model(f'Models/xgboost-reg-{formatted_test_accuracy}')
 print(f"Final Model saved (Models/xgboost-reg-{formatted_test_accuracy})")
 print("Deleting intermediate model files")
 shutil.rmtree(model_dir)
+end_time = time.time()
+total_execution_time = end_time - start_time  # This is still in seconds
+total_execution_time_minutes = total_execution_time / 60  # Convert to minutes
+print(f"Total execution time: {total_execution_time_minutes:.2f} minutes")
+
+time.sleep(5)
 
 # Run git commands to add the saved model file, commit, and push
 final_model_file_path = f'Models/xgboost-reg-{formatted_test_accuracy}'
 subprocess.run(['git', 'add', final_model_file_path], check=True)
-subprocess.run(['git', 'commit', '-m', 'tuning of regularized xgb on all features completed'], check=True)
-subprocess.run(['git', 'push', 'origin', 'HEAD'], check=True)
+# subprocess.run(['git', 'commit', '-m', 'tuning of regularized xgb on all features completed'], check=True)
+# subprocess.run(['git', 'push', 'origin', 'HEAD'], check=True)
