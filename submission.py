@@ -62,7 +62,7 @@ x_test_np = np.array(x_test)
 x_train_flat_columns = ['_'.join(col).strip() for col in x_train.columns.values]
 x_train.columns = x_train_flat_columns
 
-x_test_flat_columns = ['_'.join(col).strip() for col in x_train.columns.values]
+x_test_flat_columns = ['_'.join(col).strip() for col in x_test.columns.values]
 x_test.columns = x_train_flat_columns
 
 # Label-encode training labels
@@ -81,7 +81,6 @@ X_train_scaled = scaler.fit_transform(X_train)
 X_val_scaled = scaler.transform(X_val)
 X_test_scaled = scaler.transform(X_test)
 X_real_test_scaled = scaler.transform(x_test)  # real test to generate submission on
-
 
 # Make EDA Plots
 
@@ -102,10 +101,14 @@ plt.yticks(np.arange(0, 1, step=0.1))
 
 y_80 = cumulative_variance[idx_full_80]
 y_90 = cumulative_variance[idx_full_90]
+# noinspection PyTypeChecker
 plt.axvline(x=idx_full_80, ymax=y_80, color='red', linestyle='--')
-plt.axhline(y=y_80, xmax=idx_full_80/len(cumulative_variance), color='red', linestyle='--')
+# noinspection PyTypeChecker
+plt.axhline(y=y_80, xmax=idx_full_80 / len(cumulative_variance), color='red', linestyle='--')
+# noinspection PyTypeChecker
 plt.axvline(x=idx_full_90, ymax=y_90, color='green', linestyle='--')
-plt.axhline(y=y_90, xmax=idx_full_90/len(cumulative_variance), color='green', linestyle='--')
+# noinspection PyTypeChecker
+plt.axhline(y=y_90, xmax=idx_full_90 / len(cumulative_variance), color='green', linestyle='--')
 plt.scatter(idx_full_80, y_80, color='red', label='80% variance')
 plt.scatter(idx_full_90, y_90, color='green', label='90% variance')
 
@@ -115,7 +118,6 @@ save_plot(pcaplot, "pca")
 # Class Balance Plot
 viridis_colors = plt.cm.viridis(np.linspace(0, 1, 8))
 custom_palette = [matplotlib.colors.rgb2hex(color) for color in viridis_colors]
-
 
 class_bal = plt.figure(figsize=(10, 6))
 sns.countplot(data=y_train, y='Genre', palette=custom_palette)
@@ -128,13 +130,13 @@ save_plot(class_bal, "Class-Balance")
 
 x_train_with_genre = x_train.merge(y_train, left_index=True, right_on='Id')  # Merge Genre labels on to training data
 box1, axs = plt.subplots(nrows=2, ncols=2, figsize=(16, 9))  # Create the subplots
-sns.boxplot(x='spectral_centroid_median_01', y='Genre', data=x_train_with_genre, ax=axs[0, 0], palette=custom_palette)  # Top-left subplot
+sns.boxplot(x='spectral_centroid_median_01', y='Genre', data=x_train_with_genre, ax=axs[0, 0], palette=custom_palette)
 axs[0, 0].set_title('Spectral Centroid Median 01')
-sns.boxplot(x='spectral_rolloff_median_01', y='Genre', data=x_train_with_genre, ax=axs[0, 1], palette=custom_palette)  # Top-right subplot
+sns.boxplot(x='spectral_rolloff_median_01', y='Genre', data=x_train_with_genre, ax=axs[0, 1], palette=custom_palette)
 axs[0, 1].set_title('Spectral Rolloff Median 01')
-sns.boxplot(x='spectral_contrast_median_04', y='Genre', data=x_train_with_genre, ax=axs[1, 0], palette=custom_palette)  # Bottom-left subplot
+sns.boxplot(x='spectral_contrast_median_04', y='Genre', data=x_train_with_genre, ax=axs[1, 0], palette=custom_palette)
 axs[1, 0].set_title('Spectral Contrast Median 04')
-sns.boxplot(x='mfcc_median_01', y='Genre', data=x_train_with_genre, ax=axs[1, 1], palette=custom_palette)  # Bottom-right subplot
+sns.boxplot(x='mfcc_median_01', y='Genre', data=x_train_with_genre, ax=axs[1, 1], palette=custom_palette)
 axs[1, 1].set_title('MFCC Median 01')
 sns.set(font_scale=1.6)  # Adjust the font scale for better readability
 plt.tight_layout()
@@ -170,7 +172,6 @@ generate_submission_csv(genre_predictions_decoded, filename="submission.csv")
 y_test_decoded = label_encoder.inverse_transform(Y_test)
 pseudo_test_preds_labels = label_encoder.inverse_transform(pseudo_test_predictions.astype(int))
 
-
 calculate_training_accuracy(train_predictions)
 calculate_pseudo_test_accuracy(pseudo_test_predictions)
 
@@ -192,7 +193,8 @@ titles = ['Weight', 'Gain', 'Cover', 'Total Gain']
 
 # Plot importance for each type
 for i, ax in enumerate(axs.flat):
-    xgb.plot_importance(final_booster, importance_type=importance_types[i], max_num_features=10, ax=ax, show_values=False, color=colors[i])
+    xgb.plot_importance(final_booster, importance_type=importance_types[i], max_num_features=10, ax=ax,
+                        show_values=False, color=colors[i])
     ax.xaxis.set_major_formatter(formatter)
     ax.set_xlabel('Importance')
     ax.set_title(titles[i])
@@ -205,7 +207,6 @@ plt.title('XGBoost Final Model Feature Importance')
 
 save_plot(importanceplots, "XGB-Importance")
 
-
 # Plot Misprediction Frequency by class
 # Calculate mispredictions
 mispredictions = (y_test_decoded != pseudo_test_preds_labels)
@@ -217,8 +218,8 @@ total_counts = Counter(y_test_decoded)
 mispredicted_counts = Counter(y_test_decoded[mispredictions])
 
 # Calculate misprediction frequencies as a percentage
-misprediction_frequencies = {class_label: (mispredicted_counts.get(class_label, 0) / total_counts[class_label]) * 100
-                             for class_label in total_counts}
+misprediction_freq = {class_label: (mispredicted_counts.get(class_label, 0) / total_counts[class_label]) * 100
+                      for class_label in total_counts}
 
 # Sort the classes by name to maintain consistent order
 sorted_class_labels = sorted(total_counts.keys())
@@ -228,7 +229,7 @@ colors = plt.cm.viridis(np.linspace(0, 1, len(sorted_class_labels)))
 
 # Bar chart of misprediction frequencies (as percentages)
 xgb_mispred_freq = plt.figure(figsize=(10, 6))
-plt.bar(sorted_class_labels, [misprediction_frequencies[class_label] for class_label in sorted_class_labels], color=colors)
+plt.bar(sorted_class_labels, [misprediction_freq[class_label] for class_label in sorted_class_labels], color=colors)
 plt.xlabel('Classes')
 plt.ylabel('Misprediction Frequency (%)')
 plt.xticks(ticks=range(len(sorted_class_labels)), labels=sorted_class_labels, rotation=45)
