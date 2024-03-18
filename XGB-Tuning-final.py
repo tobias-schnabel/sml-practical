@@ -60,7 +60,7 @@ def objective(trial):
     model = xgb.train(tuning_params, dtrain, num_boost_round=5000, evals=evals,
                       early_stopping_rounds=15, verbose_eval=False)
 
-    preds = model.predict(dval, ntree_limit=model.best_ntree_limit)
+    preds = model.predict(dval, iteration_range=(0, model.best_iteration + 1))
     accuracy = accuracy_score(Y_val, preds)
 
     # Store the best iteration (number of trees) in the trial as a user attribute
