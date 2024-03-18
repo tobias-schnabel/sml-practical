@@ -66,6 +66,7 @@ def objective(trial):
         'objective': 'multi:softmax',
         'num_class': 8,
         'tree_method': 'hist',
+        'eval_metric' : 'mlogloss',
         'max_bin': 40,
         'max_depth': trial.suggest_int('max_depth', 3, 100),
         'eta': trial.suggest_float('eta', 0.01, 0.4),
@@ -90,15 +91,14 @@ def objective(trial):
     # Append the model file path to the list
     model_paths.append(model_file_path)
     # Predictions on the validation set
-    preds = model.predict(dval)
-    accuracy = accuracy_score(Y_val, preds)
-    # formatted_accuracy = f"{accuracy:.3f}"
+    # preds = model.predict(dval)
+    # accuracy = accuracy_score(Y_val, preds)
 
-    return accuracy
-
+    # return accuracy
+    return model.best_score
 
 # noinspection PyArgumentList
-study = optuna.create_study(direction='maximize', study_name="XGB-regularized")
+study = optuna.create_study(direction='minimize', study_name="XGB-regularized")  # maximize
 study.optimize(objective, n_trials=50)
 
 time.sleep(2)
