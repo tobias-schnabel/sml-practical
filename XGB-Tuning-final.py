@@ -57,7 +57,7 @@ def objective(trial):
     dval = xgb.DMatrix(X_val_scaled, label=Y_val)
 
     evals = [(dtrain, 'train'), (dval, 'validation')]
-    model = xgb.train(tuning_params, dtrain, num_boost_round=5000, evals=evals,
+    model = xgb.train(tuning_params, dtrain, num_boost_round=15_000, evals=evals,
                       early_stopping_rounds=15, verbose_eval=False)
 
     preds = model.predict(dval, iteration_range=(0, model.best_iteration + 1))
@@ -91,7 +91,7 @@ Y_train_val_combined = np.concatenate((Y_train, Y_val))
 
 # Convert the combined dataset into DMatrix form for XGBoost
 dtrain_val_combined = xgb.DMatrix(X_train_val_combined, label=Y_train_val_combined)
-
+print(f"retraining on combined train-val set for {best_iteration} boosting rounds"}
 final_model = xgb.train(params, dtrain_val_combined, num_boost_round=best_iteration)
 
 # Evaluate on the fake test set
