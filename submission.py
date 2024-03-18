@@ -17,18 +17,6 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-export_username = "ts"  # Only save plots to dropbox on right machine
-
-
-# Function to save plots to EPS for overleaf
-def save_plot(plot, filename):
-    username = getpass.getuser()
-    filepath = "/Users/ts/Library/CloudStorage/Dropbox/Apps/Overleaf/SML Practical/Figures"
-    filename += ".eps"
-    if username == export_username:
-        plot.savefig(os.path.join(filepath, filename), format='eps')  # Save as EPS
-        print("Saved plot to {}".format(filename))
-
 
 # Function to generate final submission csv file
 def generate_submission_csv(genre_predictions, filename="submission.csv"):
@@ -81,6 +69,34 @@ X_train_scaled = scaler.fit_transform(X_train)
 X_val_scaled = scaler.transform(X_val)
 X_test_scaled = scaler.transform(X_test)
 X_real_test_scaled = scaler.transform(x_test)  # real test to generate submission on
+
+# Load best XGB model
+final_model_name = 'Models/xgboost-63.7-all-data'
+final_booster = xgb.Booster()  # instantiate
+final_booster.load_model(final_model_name)  # load
+train_predictions = final_booster.predict(xgb.DMatrix(X_train_scaled))  # predict on train set
+pseudo_test_predictions = final_booster.predict(xgb.DMatrix(X_test_scaled))  # predict on pseudo-test set
+real_test_predictions = final_booster.predict(xgb.DMatrix(X_real_test_scaled))  # predict on real test set
+
+# Decode numeric predictions to string labels
+genre_predictions_decoded = label_encoder.inverse_transform(real_test_predictions.astype(int))
+
+# Make submission csv with decoded predictions
+generate_submission_csv(genre_predictions_decoded, filename="submission.csv")
+
+# ######## MAKE PLOTS ########
+export_username = "ts"  # Only save plots to dropbox on right machine
+
+
+# Function to save plots to EPS for overleaf
+def save_plot(plot, filename):
+    username = getpass.getuser()
+    filepath = "/Users/ts/Library/CloudStorage/Dropbox/Apps/Overleaf/SML Practical/Figures"
+    filename += ".eps"
+    if username == export_username:
+        plot.savefig(os.path.join(filepath, filename), format='eps')  # Save as EPS
+        print("Saved plot to {}".format(filename))
+
 
 # Make EDA Plots
 
@@ -153,20 +169,6 @@ plt.xlabel('')  # Remove x-axis title
 plt.ylabel('')  # Remove y-axis title
 plt.tight_layout()
 save_plot(cormat, "correlation")
-
-# Load best XGB model
-final_model_name = 'Models/xgboost-63.7-all-data'
-final_booster = xgb.Booster()
-final_booster.load_model(final_model_name)
-train_predictions = final_booster.predict(xgb.DMatrix(X_train_scaled))
-pseudo_test_predictions = final_booster.predict(xgb.DMatrix(X_test_scaled))
-real_test_predictions = final_booster.predict(xgb.DMatrix(X_real_test_scaled))
-
-# Decode numeric predictions to string labels
-genre_predictions_decoded = label_encoder.inverse_transform(real_test_predictions.astype(int))
-
-# Make submission csv with decoded predictions
-generate_submission_csv(genre_predictions_decoded, filename="submission.csv")
 
 # Get decoded class labels for plots
 y_test_decoded = label_encoder.inverse_transform(Y_test)
