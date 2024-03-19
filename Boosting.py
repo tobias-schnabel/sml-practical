@@ -47,9 +47,10 @@ def objective(trial):
         'num_class': 8,
         'max_depth': trial.suggest_int('max_depth', 3, 100),
         'eta': trial.suggest_float('eta', 0.01, 0.4),
-        'subsample': trial.suggest_float('subsample', 0.6, 0.85),
-        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 0.85),
-        'gamma': trial.suggest_float('gamma', 0.2, 0.7),
+        'subsample': trial.suggest_float('subsample', 0.6, 1.0),
+        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
+        'gamma': trial.suggest_float('gamma', 0.0, 1.0),
+        'lambda': trial.suggest_float('gamma', 0.0, 1.0),
     }
 
     # Convert the dataset into DMatrix form
@@ -59,7 +60,7 @@ def objective(trial):
     # List to hold the validation sets
     evals = [(dtrain, 'train'), (dval, 'validation')]
     model = xgb.train(tuning_params, dtrain, num_boost_round=5_000, evals=evals,
-                      early_stopping_rounds=25, verbose_eval=False)
+                      early_stopping_rounds=35, verbose_eval=False)
 
     # Predictions on the validation set
     preds = model.predict(dval)
@@ -93,7 +94,7 @@ dtrain_val_combined = xgb.DMatrix(X_train_val_combined, label=Y_train_val_combin
 
 print("Retraining")
 # Retrain the model on the full dataset with the best parameters
-final_model = xgb.train(params, dtrain_val_combined, num_boost_round=8_000)  # 10_000
+final_model = xgb.train(params, dtrain_val_combined, num_boost_round=12_000)  # 10_000
 
 
 # Evaluate on the pseudo test set
