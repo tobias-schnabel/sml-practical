@@ -3,7 +3,6 @@ import getpass
 import os
 import shutil
 from collections import Counter
-
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,6 +15,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+
 
 # Function to generate final submission csv file
 def generate_submission_csv(genre_predictions, filename="submission.csv"):
@@ -67,7 +67,7 @@ scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_val_scaled = scaler.transform(X_val)
 X_test_scaled = scaler.transform(X_test)
-X_real_test_scaled = scaler.transform(x_test)  # real test to generate submission on
+X_real_test_scaled = scaler.transform(x_test)  # real test set to generate submission on
 
 # Load best XGB model
 final_model_name = 'Models/xgboost-63.7-all-data'
