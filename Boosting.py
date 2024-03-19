@@ -93,7 +93,7 @@ dtrain_val_combined = xgb.DMatrix(X_train_val_combined, label=Y_train_val_combin
 
 print("Retraining")
 # Retrain the model on the full dataset with the best parameters
-final_model = xgb.train(params, dtrain_val_combined, num_boost_round=10_000)  # 5,000
+final_model = xgb.train(params, dtrain_val_combined, num_boost_round=8_000)  # 10_000
 
 
 # Evaluate on the pseudo test set
@@ -114,7 +114,7 @@ time.sleep(5)
 final_model_file_path = f'Models/xgboost-{formatted_test_accuracy}%'
 final_model.save_model(final_model_file_path)
 
-with open('params.json', 'w') as file:
+with open(f"Models/params-{formatted_test_accuracy}.json", 'w') as file:
     json.dump(params, file)
 
 subprocess.run(['git', 'add', final_model_file_path], check=True)
