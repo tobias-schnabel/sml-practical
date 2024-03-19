@@ -70,13 +70,13 @@ def objective(trial):
         'num_class': 8,
         'tree_method': 'hist',  # hist, exact
         'eval_metric': 'mlogloss',
-        'max_bin': 512,
+        # 'max_bin': 512,
         'max_depth': trial.suggest_int('max_depth', 5, 100),
         'eta': trial.suggest_float('eta', 0.005, 0.4),
         'subsample': trial.suggest_float('subsample', 0.6, 1.0),
         'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
-        'lambda': trial.suggest_float('lambda', 1e-4, 1e5, log=True),
-        'alpha': trial.suggest_float('alpha', 1e-4, 1e5, log=True),
+        # 'lambda': trial.suggest_float('lambda', 1e-4, 1e5, log=True),
+        # 'alpha': trial.suggest_float('alpha', 1e-4, 1e5, log=True),
         'gamma': trial.suggest_float('gamma', 1e-4, 1e5, log=True),
     }
 
@@ -132,7 +132,7 @@ cv_results = xgb.cv(
     num_boost_round=final_boostrounds,
     nfold=5,
     metrics={'mlogloss'},  # maybe merror?
-    early_stopping_rounds=100,
+    early_stopping_rounds=1000,
     seed=42,
     verbose_eval=100
 )
