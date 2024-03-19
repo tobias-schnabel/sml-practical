@@ -51,7 +51,10 @@ os.makedirs(model_dir, exist_ok=True)
 # Convert the dataset into DMatrix form
 dtrain = xgb.DMatrix(X_train_scaled, label=Y_train)
 dval = xgb.DMatrix(X_val_scaled, label=Y_val)
-
+# Merge train and val set to retrain on maximal amount of data possible
+X_train_val_combined = np.vstack((X_train_scaled, X_val_scaled))
+Y_train_val_combined = np.concatenate((Y_train, Y_val))
+dtrainval = xgb.DMatrix(X_train_val_combined, label=Y_train_val_combined)
 # List to hold the validation sets
 evals = [(dtrain, 'train'), (dval, 'validation')]
 # Set number of boosting rounds
@@ -66,19 +69,19 @@ def objective(trial):
         'objective': 'multi:softmax',
         'num_class': 8,
         'tree_method': 'exact',  # hist
-        'eval_metric' : 'mlogloss',
+        'eval_metric': 'mlogloss',
         # 'max_bin': 40,
         'max_depth': trial.suggest_int('max_depth', 3, 100),
         'eta': trial.suggest_float('eta', 0.01, 0.4),
         'subsample': trial.suggest_float('subsample', 0.6, 0.9),
-        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 0.9),
+        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.7, 1.0),
         'lambda': trial.suggest_float('lambda', 1e-4, 1e5, log=True),
         'alpha': trial.suggest_float('alpha', 1e-4, 1e5, log=True),
         'gamma': trial.suggest_float('gamma', 1e-4, 1e5, log=True),
     }
 
     model = xgb.train(params=tuning_params,
-                      dtrain=dtrain,
+                      dtrain=dtrainval,
                       num_boost_round=num_round,
                       evals=evals,
                       early_stopping_rounds=15,
@@ -96,6 +99,7 @@ def objective(trial):
 
     # return accuracy
     return model.best_score
+
 
 # noinspection PyArgumentList
 study = optuna.create_study(direction='minimize', study_name="XGB-regularized")  # maximize
@@ -117,13 +121,8 @@ params = {
 # Update model parameters
 params.update(best_params)
 
-# Merge train and val set to retrain on maximal amount of data possible
-X_train_val_combined = np.vstack((X_train_scaled, X_val_scaled))
-Y_train_val_combined = np.concatenate((Y_train, Y_val))
 
 final_boostrounds = 10_000
-# Convert the combined dataset into DMatrix form for XGBoost
-dtrainval = xgb.DMatrix(X_train_val_combined, label=Y_train_val_combined)
 
 print("Determining optimal number of additional bossting rounds using CV")
 # noinspection PyTypeChecker
