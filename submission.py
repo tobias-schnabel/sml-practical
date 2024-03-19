@@ -70,7 +70,7 @@ X_test_scaled = scaler.transform(X_test)
 X_real_test_scaled = scaler.transform(x_test)  # real test set to generate submission on
 
 # Load best XGB model
-final_model_name = 'Models/xgboost-63.7-all-data'
+final_model_name = 'Models/xgboost-62.9%'
 final_booster = xgb.Booster()  # instantiate
 final_booster.load_model(final_model_name)  # load
 train_predictions = final_booster.predict(xgb.DMatrix(X_train_scaled))  # predict on train set
