@@ -17,7 +17,6 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-
 # Function to generate final submission csv file
 def generate_submission_csv(genre_predictions, filename="submission.csv"):
     submission_df = pd.DataFrame(data={
@@ -109,24 +108,26 @@ pcaplot = plt.figure(figsize=(10, 6))
 
 # Plot the cumulative explained variance
 cumulative_variance = np.cumsum(pca.explained_variance_ratio_)
-plt.plot(cumulative_variance)
-plt.xlabel('Number of Components')
-plt.ylabel('Cumulative Explained Variance')
-plt.title('PCA Cumulative Explained Variance')
+plt.plot(cumulative_variance, color=plt.cm.viridis(0.5))
+plt.xlabel('Number of Components', fontsize=14)
+plt.ylabel('Cumulative Explained Variance', fontsize=14)
 plt.yticks(np.arange(0, 1, step=0.1))
 
 y_80 = cumulative_variance[idx_full_80]
 y_90 = cumulative_variance[idx_full_90]
+
 # noinspection PyTypeChecker
-plt.axvline(x=idx_full_80, ymax=y_80, color='red', linestyle='--')
+plt.axvline(x=idx_full_80, ymax=y_80, color=plt.cm.viridis(0.3), linestyle='--')
 # noinspection PyTypeChecker
-plt.axhline(y=y_80, xmax=idx_full_80 / len(cumulative_variance), color='red', linestyle='--')
+plt.axhline(y=y_80, xmax=idx_full_80 / len(cumulative_variance), color=plt.cm.viridis(0.4), linestyle='--')
 # noinspection PyTypeChecker
-plt.axvline(x=idx_full_90, ymax=y_90, color='green', linestyle='--')
+plt.axvline(x=idx_full_90, ymax=y_90, color=plt.cm.viridis(0.6), linestyle='--')
 # noinspection PyTypeChecker
-plt.axhline(y=y_90, xmax=idx_full_90 / len(cumulative_variance), color='green', linestyle='--')
-plt.scatter(idx_full_80, y_80, color='red', label='80% variance')
-plt.scatter(idx_full_90, y_90, color='green', label='90% variance')
+plt.axhline(y=y_90, xmax=idx_full_90 / len(cumulative_variance), color=plt.cm.viridis(0.7), linestyle='--')
+
+# Scatter points with adjusted Viridis colors
+plt.scatter(idx_full_80, y_80, color=plt.cm.viridis(0.3), label='80% variance')
+plt.scatter(idx_full_90, y_90, color=plt.cm.viridis(0.6), label='90% variance')
 
 plt.legend(loc='best')
 save_plot(pcaplot, "pca")
@@ -137,11 +138,12 @@ custom_palette = [matplotlib.colors.rgb2hex(color) for color in viridis_colors]
 
 class_bal = plt.figure(figsize=(10, 6))
 sns.countplot(data=y_train, y='Genre', palette=custom_palette)
-plt.title('Distribution of Genres in the Training Set')
-plt.xlabel('Count')
-plt.ylabel('Genre')
-plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
-# 
+plt.xlabel('Count', fontsize=14)
+plt.ylabel('Genre', fontsize=14)
+# Adjust tick label sizes
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+plt.subplots_adjust(left=0.2, right=0.9, top=0.9, bottom=0.1)
 save_plot(class_bal, "Class-Balance")
 
 x_train_with_genre = x_train.merge(y_train, left_index=True, right_on='Id')  # Merge Genre labels on to training data
@@ -162,7 +164,7 @@ save_plot(box1, "boxplot-1")
 # Correlation matrix
 df_corr = X_train.filter(like='spectral_contrast')
 corr_mat = df_corr.corr()
-cormat = plt.figure(figsize=(13, 13))
+cormat = plt.figure(figsize=(16, 13))
 sns.heatmap(corr_mat, cmap='viridis')
 plt.xticks(rotation=45, ha='right')  # Rotate x-axis labels
 plt.xlabel('')  # Remove x-axis title
@@ -205,8 +207,6 @@ for i, ax in enumerate(axs.flat):
     new_labels = [feature_names[i] for i in indices]
     ax.set_yticklabels(new_labels)
 
-plt.title('XGBoost Final Model Feature Importance')
-
 save_plot(importanceplots, "XGB-Importance")
 
 # Plot Misprediction Frequency by class
@@ -235,7 +235,6 @@ plt.bar(sorted_class_labels, [misprediction_freq[class_label] for class_label in
 plt.xlabel('Classes')
 plt.ylabel('Misprediction Frequency (%)')
 plt.xticks(ticks=range(len(sorted_class_labels)), labels=sorted_class_labels, rotation=45)
-plt.title('XGBoost Final Model Misprediction Frequency for Each Class')
 plt.subplots_adjust(bottom=0.3)  # Increase the bottom margin
 
 save_plot(xgb_mispred_freq, "xgb_mispred_freq")
@@ -254,9 +253,8 @@ heatmap = plt.figure(figsize=(10, 8))
 sns.heatmap(class_report_df, cmap='viridis', cbar=True, fmt='.2g',
             annot_kws={'color': 'black'},  # Add contrasting color for readability
             yticklabels=unique_class_names)
-plt.title('Classification Report Heatmap')
-plt.ylabel('Class Label')
-plt.xlabel('Metrics')
+plt.ylabel('Class Label', fontsize=14)
+plt.xlabel('Metrics', fontsize=14)
 heatmap.subplots_adjust(left=0.2)
 save_plot(heatmap, "XGB-Heatmap")
 
