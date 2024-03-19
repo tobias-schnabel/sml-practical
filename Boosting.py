@@ -1,8 +1,7 @@
 # Library Import
 import subprocess
-import os
+import json
 import time
-import shutil
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -111,10 +110,13 @@ total_execution_time_minutes = total_execution_time / 60  # Convert to minutes
 print(f"Total execution time: {total_execution_time_minutes:.2f} minutes")
 time.sleep(5)
 
-
 # Run git commands to add the saved model file, commit, and push
 final_model_file_path = f'Models/xgboost-{formatted_test_accuracy}%'
 final_model.save_model(final_model_file_path)
+
+with open('params.json', 'w') as file:
+    json.dump(params, file)
+
 subprocess.run(['git', 'add', final_model_file_path], check=True)
 # subprocess.run(['git', 'commit', '-m', 'tuning of regularized xgb on all features completed'], check=True)
 # subprocess.run(['git', 'push', 'origin', 'HEAD'], check=True)
