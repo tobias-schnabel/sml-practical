@@ -72,7 +72,7 @@ def objective(trial):
 start_time = time.time()  # start execution timing
 # noinspection PyArgumentList
 study = optuna.create_study(direction='maximize', study_name="XGB")
-study.optimize(objective, n_trials=100)
+study.optimize(objective, n_trials=50)
 
 
 best_params = study.best_trial.params
@@ -92,6 +92,7 @@ Y_train_val_combined = np.concatenate((Y_train, Y_val))
 # Convert the combined dataset into DMatrix form for XGBoost
 dtrain_val_combined = xgb.DMatrix(X_train_val_combined, label=Y_train_val_combined)
 
+print("Retraining")
 # Retrain the model on the full dataset with the best parameters
 final_model = xgb.train(params, dtrain_val_combined, num_boost_round=10_000)  # 5,000
 
