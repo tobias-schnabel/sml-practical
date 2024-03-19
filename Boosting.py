@@ -48,9 +48,9 @@ def objective(trial):
         'num_class': 8,
         'max_depth': trial.suggest_int('max_depth', 3, 100),
         'eta': trial.suggest_float('eta', 0.01, 0.4),
-        'subsample': trial.suggest_float('subsample', 0.6, 1.0),
-        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
-        'gamma': trial.suggest_float('gamma', 0.0, 0.6),
+        'subsample': trial.suggest_float('subsample', 0.6, 0.85),
+        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 0.85),
+        'gamma': trial.suggest_float('gamma', 0.2, 0.7),
     }
 
     # Convert the dataset into DMatrix form
