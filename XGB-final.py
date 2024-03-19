@@ -58,7 +58,7 @@ dtrainval = xgb.DMatrix(X_train_val_combined, label=Y_train_val_combined)
 # List to hold the validation sets
 evals = [(dtrain, 'train'), (dval, 'validation')]
 # Set number of boosting rounds
-num_round = 300
+num_round = 5_000
 
 start_time = time.time()  # start execution timing
 
@@ -68,13 +68,13 @@ def objective(trial):
     tuning_params = {
         'objective': 'multi:softmax',
         'num_class': 8,
-        'tree_method': 'exact',  # hist
+        'tree_method': 'hist',  # hist, exact
         'eval_metric': 'mlogloss',
-        # 'max_bin': 40,
-        'max_depth': trial.suggest_int('max_depth', 3, 100),
-        'eta': trial.suggest_float('eta', 0.01, 0.4),
-        'subsample': trial.suggest_float('subsample', 0.6, 0.9),
-        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.7, 1.0),
+        'max_bin': 40,
+        'max_depth': trial.suggest_int('max_depth', 5, 100),
+        'eta': trial.suggest_float('eta', 0.005, 0.4),
+        'subsample': trial.suggest_float('subsample', 0.6, 1.0),
+        'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
         'lambda': trial.suggest_float('lambda', 1e-4, 1e5, log=True),
         'alpha': trial.suggest_float('alpha', 1e-4, 1e5, log=True),
         'gamma': trial.suggest_float('gamma', 1e-4, 1e5, log=True),
@@ -103,7 +103,7 @@ def objective(trial):
 
 # noinspection PyArgumentList
 study = optuna.create_study(direction='minimize', study_name="XGB-regularized")  # maximize
-study.optimize(objective, n_trials=100)
+study.optimize(objective, n_trials=50)
 
 time.sleep(2)
 best_model_path = model_paths[study.best_trial.number]
@@ -142,7 +142,7 @@ best_boosting_rounds = cv_results.shape[0]
 additional_rounds = max(0, (best_boosting_rounds - num_round))
 print(f"Best number of boosting rounds determined by cross-validation: {best_boosting_rounds}")
 print(f"Continuing training of best model for additional {additional_rounds} rounds")
-# params.update({'max_bin': 500})
+params.update({'max_bin': 500})
 # Retrain the model on the full dataset with the best parameters
 final_model = xgb.train(
     xgb_model=best_model,
@@ -180,5 +180,5 @@ time.sleep(5)
 # Run git commands to add the saved model file, commit, and push
 final_model_file_path = f'Models/xgboost-reg-{formatted_test_accuracy}'
 subprocess.run(['git', 'add', final_model_file_path], check=True)
-subprocess.run(['git', 'commit', '-m', 'tuning of regularized xgb on all features completed'], check=True)
+# subprocess.run(['git', 'commit', '-m', 'tuning of regularized xgb on all features completed'], check=True)
 # subprocess.run(['git', 'push', 'origin', 'HEAD'], check=True)
