@@ -103,7 +103,7 @@ def objective(trial):
 
 # noinspection PyArgumentList
 study = optuna.create_study(direction='minimize', study_name="XGB-regularized")  # maximize
-study.optimize(objective, n_trials=50)
+study.optimize(objective, n_trials=100)
 
 time.sleep(2)
 best_model_path = model_paths[study.best_trial.number]
@@ -180,5 +180,5 @@ time.sleep(5)
 # Run git commands to add the saved model file, commit, and push
 final_model_file_path = f'Models/xgboost-reg-{formatted_test_accuracy}'
 subprocess.run(['git', 'add', final_model_file_path], check=True)
-# subprocess.run(['git', 'commit', '-m', 'tuning of regularized xgb on all features completed'], check=True)
+subprocess.run(['git', 'commit', '-m', 'tuning of regularized xgb on all features completed'], check=True)
 # subprocess.run(['git', 'push', 'origin', 'HEAD'], check=True)
