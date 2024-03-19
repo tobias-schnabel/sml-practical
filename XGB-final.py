@@ -70,7 +70,7 @@ def objective(trial):
         'num_class': 8,
         'tree_method': 'hist',  # hist, exact
         'eval_metric': 'mlogloss',
-        'max_bin': 40,
+        'max_bin': 512,
         'max_depth': trial.suggest_int('max_depth', 5, 100),
         'eta': trial.suggest_float('eta', 0.005, 0.4),
         'subsample': trial.suggest_float('subsample', 0.6, 1.0),
@@ -94,15 +94,15 @@ def objective(trial):
     # Append the model file path to the list
     model_paths.append(model_file_path)
     # Predictions on the validation set
-    # preds = model.predict(dval)
-    # accuracy = accuracy_score(Y_val, preds)
+    preds = model.predict(dval)
+    accuracy = accuracy_score(Y_val, preds)
 
-    # return accuracy
-    return model.best_score
+    return accuracy
+    # return model.best_score
 
 
 # noinspection PyArgumentList
-study = optuna.create_study(direction='minimize', study_name="XGB-regularized")  # maximize
+study = optuna.create_study(direction='maximize', study_name="XGB-regularized")  # minimize
 study.optimize(objective, n_trials=50)
 
 time.sleep(2)
@@ -142,7 +142,7 @@ best_boosting_rounds = cv_results.shape[0]
 additional_rounds = max(0, (best_boosting_rounds - num_round))
 print(f"Best number of boosting rounds determined by cross-validation: {best_boosting_rounds}")
 print(f"Continuing training of best model for additional {additional_rounds} rounds")
-params.update({'max_bin': 500})
+
 # Retrain the model on the full dataset with the best parameters
 final_model = xgb.train(
     xgb_model=best_model,
