@@ -81,7 +81,7 @@ def objective(trial):
     }
 
     model = xgb.train(params=tuning_params,
-                      dtrain=dtrainval,
+                      dtrain=dtrain,
                       num_boost_round=num_round,
                       evals=evals,
                       early_stopping_rounds=15,
@@ -130,9 +130,9 @@ cv_results = xgb.cv(
     params=params,
     dtrain=dtrainval,
     num_boost_round=final_boostrounds,
-    nfold=4,
+    nfold=5,
     metrics={'mlogloss'},  # maybe merror?
-    early_stopping_rounds=200,
+    early_stopping_rounds=100,
     seed=42,
     verbose_eval=100
 )
