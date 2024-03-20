@@ -260,4 +260,5 @@ save_plot(heatmap, "XGB-Heatmap")
 
 # Copy code to overleaf
 shutil.copy('submission.py', '/Users/ts/Library/CloudStorage/Dropbox/Apps/Overleaf/SML Practical/Code')
-print("Source Code copied to Overleaf")
+shutil.copy('tuning.txt', '/Users/ts/Library/CloudStorage/Dropbox/Apps/Overleaf/SML Practical/Code')
+print("Source Code and Tuning log copied to Overleaf")
