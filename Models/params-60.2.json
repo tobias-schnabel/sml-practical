@@ -1,0 +1,1 @@
+{"objective": "multi:softmax", "num_class": 8, "max_depth": 30, "eta": 0.07531638834139263, "subsample": 0.837510878070264, "colsample_bytree": 0.6388704413720533, "gamma": 0.5706634267493472}
