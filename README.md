@@ -1,6 +1,8 @@
 # sml-practical
 Group project for Oxford University SB 2.2 Statistical Machine Learning.
 Assignment: [SMLAssessedPractical.pdf](https://github.com/tobias-schnabel/sml-practical/files/14511487/SMLAssessedPractical.pdf)
+Submission: [report.pdf](https://github.com/tobias-schnabel/sml-practical/files/14665582/report.pdf)
+
 
 ## Setup
 1. To activate local environment for the first time, in terminal use
